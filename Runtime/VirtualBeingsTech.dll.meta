@@ -1,0 +1,38 @@
+fileFormatVersion: 2
+guid: f458912201050ed4ca3895672c158549
+PluginImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  iconMap: {}
+  executionOrder:
+    VirtualBeings.Beings.Bird.BirdBeing: 100
+    VirtualBeings.Installer.BeingInstaller: -5000
+    VirtualBeings.Tech.Beings.Bird.BirdBeing: 100
+    VirtualBeings.Tech.Beings.Floater.FloaterBeing: 100
+    VirtualBeings.Tech.Beings.Humanoid.HumanoidBeing: 100
+  defineConstraints: []
+  isPreloaded: 0
+  isOverridable: 0
+  isExplicitlyReferenced: 0
+  validateReferences: 1
+  platformData:
+  - first:
+      Any: 
+    second:
+      enabled: 1
+      settings: {}
+  - first:
+      Editor: Editor
+    second:
+      enabled: 0
+      settings:
+        DefaultValueInitialized: true
+  - first:
+      Windows Store Apps: WindowsStoreApps
+    second:
+      enabled: 0
+      settings:
+        CPU: AnyCPU
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
