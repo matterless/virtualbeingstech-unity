@@ -13,7 +13,7 @@
 
 ![image](https://user-images.githubusercontent.com/128504226/226867580-119c6f85-2921-4247-8805-17250946e1c6.png)
 
-- Paste this link : `https://github.com/VIRTUALBEINGS/virtualbeingstech-unity`
+- Paste this link : `https://github.com/VIRTUALBEINGS/virtualbeingstech-unity.git`
 
 ![image](https://user-images.githubusercontent.com/128504226/226868422-3ea84607-dac3-47f2-86a1-7b0be9b1aaf4.png)
 
