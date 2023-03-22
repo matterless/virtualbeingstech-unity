@@ -40,7 +40,7 @@ public class VBIntegrationEditor : EditorWindow
         }
         _vbSettings = (VirtualBeingsSettings)AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(settingsGuid[0]), typeof(VirtualBeingsSettings));
 
-        _tokenField.SetValueWithoutNotify(_vbSettings.Token);
+        _tokenField.SetValueWithoutNotify(_vbSettings.Key);
 
         //Call the event handler
         SetupButtonHandler();
@@ -68,7 +68,7 @@ public class VBIntegrationEditor : EditorWindow
         //GameObject beingInstallerPrefab = AssetDatabase.LoadAssetAtPath("Packages/com.virtualbeings.tech.virtualbeingstech/Runtime/Prefabs/BeingInstaller.prefab", typeof(GameObject)) as GameObject;
 
        
-        _vbSettings.Token = _tokenField.text;
+        _vbSettings.Key = _tokenField.text;
         //BeingInstallerSettings beingInstallerSettings = ObjectFactory.CreateInstance<Material>();
         //material.shader = Shader.Find("Transparent/Diffuse");
         //AssetDatabase.CreateAsset(material, "Assets/newMaterial.mat");

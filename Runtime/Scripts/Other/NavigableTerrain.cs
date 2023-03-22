@@ -423,7 +423,7 @@ namespace VirtualBeings.Tech.Shared
             public float TimeInMsPerFrameForNavMeshProcessing = 1f;
             public float YValueForDebugMesh = .01f;
             public float UpdateFrequencyForBeingsInSeconds = .33f;
-            public LayerMask AssignableCharacterLayers;
+            public LayerMask AssignableCharacterLayers = 1 << 0; // default layer (0)
         }
     }
 }

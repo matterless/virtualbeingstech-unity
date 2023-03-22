@@ -9370,5 +9370,15 @@
             TODO(RAPH) : Create a Package installer for reach being package to import virtual being tech automatically (and controller package too)
             </summary>
         </member>
+        <member name="F:VirtualBeings.UnityIntegration.VirtualBeingsSettings.Key">
+            <summary>
+            Key that define the subscription model.
+            </summary>
+        </member>
+        <member name="T:VirtualBeings.UnityIntegration.VirtualBeingsSettings.SubscriptionData">
+            <summary>
+            For a given Key, define the max number of MainCharacter, SideCharacter and BackgroundCharacter during a Session.
+            </summary>
+        </member>
     </members>
 </doc>

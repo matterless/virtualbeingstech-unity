@@ -39,9 +39,10 @@ namespace VirtualBeings.Tech.Shared
                 .GetField("_motives", BindingFlags.Instance | BindingFlags.NonPublic)
                 .GetValue(beingSettings);
 
-            RootActivityFactory[] rootActivities = (RootActivityFactory[])typeof(BeingSettings)
-                .GetField("RootActivities", BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy)
-                .GetValue(beingSettings);
+
+            //RootActivityFactory[] rootActivities = (RootActivityFactory[])typeof(BeingSettings)
+            //    .GetField("RootActivities", BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy)
+            //    .GetValue(beingSettings);
 
             List<MotiveSettings> tempMotives = new List<MotiveSettings>(motives);
 
@@ -52,7 +53,7 @@ namespace VirtualBeings.Tech.Shared
                 MotiveSettings motiveSettings = motives[i];
                 if (motiveSettings == null ||
                     motiveSettings.MotiveName == null ||
-                    rootActivities.Where(raf => raf.MotiveName != null && raf.MotiveName.Name.Equals(motiveSettings.MotiveName.Name)).Count() == 0)
+                    beingSettings.RootActivities.Where(raf => raf.MotiveName != null && raf.MotiveName.Name.Equals(motiveSettings.MotiveName.Name)).Count() == 0)
                 {
                     tempMotives.Remove(motiveSettings);
                 }
@@ -60,9 +61,9 @@ namespace VirtualBeings.Tech.Shared
 
             // 2 - Add new Motives
             // If there is a motive inside RAF that do not exist in birdMotives, we add it.
-            for (int i = 0; i < rootActivities.Length; ++i)
+            for (int i = 0; i < beingSettings.RootActivities.Length; ++i)
             {
-                RootActivityFactory rootActivity = rootActivities[i];
+                RootActivityFactory rootActivity = beingSettings.RootActivities[i];
                 if (rootActivity == null || rootActivity.MotiveName == null)
                 {
                     continue;
