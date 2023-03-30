@@ -6,6 +6,7 @@
 using System.IO;
 using UnityEditor;
 using UnityEngine;
+using VirtualBeings.Installer;
 using VirtualBeings.UnityIntegration;
 
 namespace VirtualBeings.Tech.Shared
@@ -17,13 +18,14 @@ namespace VirtualBeings.Tech.Shared
 
         private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths, bool didDomainReload)
         {
-            string[] settingsGuid = AssetDatabase.FindAssets("Virtual Beings Settings t:scriptableobject", new string[] { "Assets" });
+            string[] settingsGuid = AssetDatabase.FindAssets("t:VirtualBeingsSettings", new string[] { "Assets" });
             if (settingsGuid == null || settingsGuid.Length <= 0)
             {
                 CreateVirtualBeingsSettings();
             }
             if (settingsGuid != null && settingsGuid.Length > 1)
             {
+                // Ensure only one "Virtual Beings Settings" exist by deleting all other files.
                 for (int i = 1; i < settingsGuid.Length; ++i)
                 {
                     string pathToDelete = AssetDatabase.GUIDToAssetPath(settingsGuid[i]);
@@ -45,6 +47,8 @@ namespace VirtualBeings.Tech.Shared
             AssetDatabase.CreateAsset(vbSettings, $"Assets/{SETTINGS_SAVE_FOLDER}/{SETTINGS_ASSET_NAME}");
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+
+            FillVirtualSettingsReference(vbSettings);
         }
 
         public static void ValidateDirectory(string path)
@@ -52,6 +56,19 @@ namespace VirtualBeings.Tech.Shared
             if (!Directory.Exists(path))
             {
                 Directory.CreateDirectory(path);
+            }
+        }
+
+        private static void FillVirtualSettingsReference(VirtualBeingsSettings vbSettings)
+        {
+            string[] settingsGUID = AssetDatabase.FindAssets("t:BeingInstallerSettings", new string[] { "Assets" });
+
+            foreach(string settingGUID in settingsGUID)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(settingGUID);
+                Debug.Log("Found file in : " + path);
+                BeingInstallerSettings beingInstallerSettings = (BeingInstallerSettings)AssetDatabase.LoadAssetAtPath(path, typeof(BeingInstallerSettings));
+                beingInstallerSettings.VirtualBeingsSettings = vbSettings;
             }
         }
     }

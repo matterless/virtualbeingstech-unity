@@ -583,10 +583,13 @@
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.ThreatTracker.PostThreat(VirtualBeings.Tech.ActiveCognition.Threat.ReasonOfThreat,VirtualBeings.Tech.ActiveCognition.TrackedInteractable,System.Boolean,System.Single)">
-            internals
             <summary>
-            NB: works even if 'source' is already posing a threat; in this case 'reason' will be updated.
+             NB: works even if 'source' is already posing a threat; in this case 'reason' will be updated.
             </summary>
+            <param name="reason"></param>
+            <param name="source"></param>
+            <param name="allowTrustFilter"></param>
+            <param name="intrinsicThreat01"></param>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.ThreatTracker.SetInactive(VirtualBeings.Tech.ActiveCognition.TrackedInteractable)">
             <summary>
@@ -1932,6 +1935,42 @@
             <param name="positionAtLastFrame"></param>
             <param name="rotationAtLastFrame"></param>
         </member>
+        <member name="T:VirtualBeings.Tech.BehaviorComposition.Face">
+            <summary>
+            The parent activity need to have a Look Service Activity
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Face.#ctor(VirtualBeings.Tech.BehaviorComposition.Activity)">
+            <summary>
+            The parent activity need to have a Look Service Activity
+            </summary>
+            <param name="parent"></param>
+        </member>
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.LookSpeediness.Sloppiest">
+            <summary>
+            Always use the minimal value for the look speed, without taking the current Expression into account
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.LookSpeediness.Sloppy">
+            <summary>
+            Use a speed between the minimal look speed and the one defined by the current Expression
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.LookSpeediness.Normal">
+            <summary>
+            Use the speed defined by the current Expression
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.LookSpeediness.Fast">
+            <summary>
+            Use a speed between the one defined by the current Expression and the maximum look speed
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.LookSpeediness.Fastest">
+            <summary>
+            Always use the maximal value for the look speed, without taking the current Expression into account
+            </summary>
+        </member>
         <member name="T:VirtualBeings.Tech.BehaviorComposition.LookBase">
              <summary>
              Abstract general-purpose encapsulation for LookAt that is distractible and provides basic behavioral variations
@@ -1953,6 +1992,24 @@
             <summary>
             Shorten default distraction duration? (E.g., when being is nervy or busy or uninterested).
             0f means 'not distractible'
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.LookBase.LookSpeediness">
+            <summary>
+            The speediness for this particular look. If default, uses the DefaultLookSpeediness value. Otherwise
+            uses the predefined values for each look.
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.LookBase.DefaultLookSpeediness">
+            <summary>
+            The default speediness for this particular look. This is the value that will be used
+            if the LookSpeediness declared for this look is set to Default.
+            This is a value between -1 and 1.
+             * -1 corresponds to Sloppiest
+             * -0.5 corresponds to Sloppy
+             * 0 corresponds to Normal
+             * 0.5 corresponds to Fast
+             * 1 corresponds to Fastest
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.BehaviorComposition.LookBase.RandomizeHeadLookDirection(System.Boolean)">
@@ -2189,6 +2246,11 @@
             <summary>
             How much look time can vary, used to define a range as in [X / DurationVariationFactor, X * DurationVariationFactor].
             Clamped between 1f and 5f.
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.LookDuringMoveTo.LookSpeediness">
+            <summary>
+            The LookSpeediness to use for this look. See LookBase.LookSpeediness.
             </summary>
         </member>
         <member name="P:VirtualBeings.Tech.BehaviorComposition.LookIntermittent.EyesClosed01_OnInteractable">
@@ -3251,7 +3313,7 @@
             which animation state there will be for the specific type of being.
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Being.InitializeBeing(VirtualBeings.Tech.ActiveCognition.BeingData,VirtualBeings.Tech.ActiveCognition.BeingSettings,VirtualBeings.Tech.ActiveCognition.BeingSharedSettings,VirtualBeings.Tech.UnityIntegration.NavigableTerrainManager.Settings)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Being.InitializeBeing(VirtualBeings.Tech.ActiveCognition.BeingData,VirtualBeings.Tech.ActiveCognition.BeingSettings,VirtualBeings.Tech.ActiveCognition.BeingSharedSettings,VirtualBeings.Tech.UnityIntegration.NavigableTerrainManager.Settings,VirtualBeings.Tech.Architecture.CharacterType)">
             <summary>
             Initialize the being with the given Data and Settings (either on creation or when deserializing when loading a save)
             </summary>
@@ -3259,6 +3321,7 @@
             <param name="beingSettings"></param>
             <param name="beingSharedSettings"></param>
             <param name="terrainSettings"></param>
+            <param name="characterType"></param>
         </member>
         <member name="M:VirtualBeings.Tech.BehaviorComposition.Being.InitializeBeingSpecific">
             <summary>
@@ -3556,6 +3619,41 @@
             The time passed is calculated at the frame where the feet are detached from ground.
             Used for direction calculation inside TakeOff
             </summary>
+        </member>
+        <member name="T:VirtualBeings.Tech.BehaviorComposition.Idle">
+            <summary>
+            Generic Idle functionality that make the being feel alive without doing anything
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Locomotion.MoveTo(VirtualBeings.Tech.BehaviorComposition.IRS,System.Func{UnityEngine.Vector3},System.Nullable{System.Single},System.Int32)">
+             <summary>
+            
+             </summary>
+             <param name="targetRS"></param>
+             <param name="goal"></param>
+             <param name="overrideArrivalDistance">If overriden, the arrival distance wont reset to previous value, it is kept this way until new override</param>
+             <param name="variationIndex">Value between 0 and 5 (included) to specify the walk variation to use></param>
+        </member>
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Locomotion.RequestST(VirtualBeings.Tech.BehaviorComposition.IST,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+            Request transition to ST (self transition). Note that unlike RS, ST are (1) not guarranteed and
+            (2) interruptible by another ST request or a RS change request
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Locomotion.SetTargetRS(VirtualBeings.Tech.BehaviorComposition.IRS,VirtualBeings.Tech.BehaviorComposition.ITransitionType,System.Single,System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+            Request new RS (root state); unless overridden by another request (or this behavior looses control),
+            it is guaranteed that this change is eventually successful.
+            NB: transition type needs to be set procedurally for now.
+            </summary>
+            <param name="targetRS"></param>
+            <param name="transitionType">Note that this may be overriden if a functional TransitionType is needed
+            to leave/arrive at an angle etc.</param>
+            <param name="transitionSpeed01"></param>
+            <param name="transitionIntensity01"></param>
+            <param name="transitionLeftRight"></param>
+            <param name="transitionParameterA"></param>
+            <param name="transitionParameterB"></param>
         </member>
         <member name="T:VirtualBeings.Tech.BehaviorComposition.ServiceActivity">
             <summary>
@@ -4523,6 +4621,7 @@
             <summary>
             Add a custom delta to urgency factor to slow down or speed up neck/head movements independent
             of current Expression. Must be reset manually.
+            Delta should be a value between -1 (max slowdown) and 1 (max speed up)
             </summary>
         </member>
         <member name="P:VirtualBeings.Tech.BehaviorComposition.LookAtBehavior.IsInAnimatedExpression">
@@ -4598,14 +4697,6 @@
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.BehaviorComposition.LookAtBehavior.#ctor(VirtualBeings.Tech.BehaviorComposition.ServiceActivity,System.Func{UnityEngine.Vector3},System.Single,System.Nullable{VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper},System.Func{UnityEngine.Vector3},System.Single,System.Single,System.Single)">
-            <summary>
-            LookAt makes character look at target with a specified expression. It also creates small, realistic variations of the expression
-            every few seconds. It does not automatically handle head-offset-rotations.
-            NB: If targetProviderHead/Eyes are both, the behavior will have no effect.
-            NB: Requested lookat-offsets for head/eyes will *only* be reset when the behavior resumes/resets.
-            </summary>
-        </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.LookAtBehavior.#ctor(VirtualBeings.Tech.BehaviorComposition.IActivity,System.Func{UnityEngine.Vector3},System.Single,System.Nullable{VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper},System.Func{UnityEngine.Vector3},System.Single,System.Single,System.Single)">
             <summary>
             LookAt makes character look at target with a specified expression. It also creates small, realistic variations of the expression
             every few seconds. It does not automatically handle head-offset-rotations.
@@ -6379,6 +6470,15 @@
             A value of .5 gives 1 second, a value of .9 roughly 6.5 seconds.
             See https://en.wikipedia.org/wiki/Exponential_decay#Half-life
             </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.UnityIntegration.TransformExtensions.FindChildRecursive(UnityEngine.Transform,System.String)">
+            <summary>
+            Find a child transform by the given in the parent caller.
+            Work recursively.
+            </summary>
+            <param name="parent"></param>
+            <param name="childName"></param>
+            <returns></returns>
         </member>
         <member name="T:VirtualBeings.Tech.UnityIntegration.IVariableDriverInfo">
             <summary>
@@ -9269,46 +9369,89 @@
             <param name="CCW">True means that the points will be sorted in counter-clockwise order</param>
             <returns>A new collection with the sorted Vec2s</returns>
         </member>
-        <member name="M:VirtualBeings.BehaviorComposition.Face.#ctor(VirtualBeings.Tech.BehaviorComposition.Activity)">
+        <member name="P:VirtualBeings.BehaviorComposition.Activities.LookIntermittentDuringMoveTo.TargetInteractable">
             <summary>
-            The parent activity need to have a Look Service Activity
+            The interactable to look at when not in LookDuringMoveTo.
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.BehaviorComposition.Activities.LookIntermittentDuringMoveTo.IsDistracted">
+            <summary>
+            Are we currently looking at a distracting event?
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.BehaviorComposition.Activities.LookIntermittentDuringMoveTo.IsLookingAtInteractable">
+            <summary>
+            Whether the look is currently focused on the interactable or not
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.BehaviorComposition.Activities.LookIntermittentDuringMoveTo.AverageLookAtInteractableDuration">
+            <summary>
+            The average duration to spend looking at the given interactable. Will be modulated by DurationVariationFactor.
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.BehaviorComposition.Activities.LookIntermittentDuringMoveTo.AverageLookDuringMoveToDuration">
+            <summary>
+            The average duration to spend in LookDuringMoveTo. Will be modulated by DurationVariationFactor.
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.BehaviorComposition.Activities.LookIntermittentDuringMoveTo.MaxDistractionDuration">
+            <summary>
+            Look at distraction (if available)?
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.BehaviorComposition.Activities.LookIntermittentDuringMoveTo.DurationVariationFactor">
+            <summary>
+            How much the duration of each look can vary.
+            1 means no variation, 2 for example would mean that the duration  of the look at interactable would range
+            between AverageLookAtInteractableDuration / 2 and AverageLookAtInteractableDuration * 2.
+            The same value is used as the factor to vary between LookAtInteractable and LookDuringMoveTo and as the variation
+            factor for LookDuringMoveTo.
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.BehaviorComposition.Activities.LookIntermittentDuringMoveTo.LookAtInteractableSpeediness">
+            <summary>
+            The speediness when looking at the interactable. See LookBase.LookSpeediness.
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.BehaviorComposition.Activities.LookIntermittentDuringMoveTo.LookDuringMoveToSpeediness">
+            <summary>
+            The speediness when looking while moving. See LookBase.LookSpeediness.
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.BehaviorComposition.Activities.LookIntermittentDuringMoveTo.DoAdditiveExpression(VirtualBeings.Tech.BehaviorComposition.IAdditiveExpression,System.Single,System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+            Request an additive expression on the currently active look, if any.
+            </summary>
+            <param name="additiveNeckHeadFaceExpression"></param>
+            <param name="intensity"></param>
+            <param name="speed01"></param>
+            <param name="preferredDuration"></param>
+            <param name="volume01"></param>
+            <param name="leftRight"></param>
+        </member>
+        <member name="P:VirtualBeings.BehaviorComposition.Activities.LookIntermittentDuringMoveTo.IsInAdditiveExpression">
+            <summary>
+            Whether either LookAtInteractable or LookDuringMoveTo is in an additive expression
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.BehaviorComposition.Activities.LookIntermittentDuringMoveTo.#ctor(VirtualBeings.Tech.BehaviorComposition.IActivity,VirtualBeings.Tech.BehaviorComposition.Locomotion,VirtualBeings.Tech.BehaviorComposition.IEmoter,VirtualBeings.Tech.UnityIntegration.IInteractable,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Boolean,System.Boolean,System.Nullable{VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper})">
+            <summary>
+             Toggle between looking at a target and just looking around
             </summary>
             <param name="parent"></param>
-        </member>
-        <member name="T:VirtualBeings.BehaviorComposition.Idle">
-            <summary>
-            Generic Idle functionnality that make the being feel alive without doing anything
-            </summary>
-        </member>
-        <member name="M:VirtualBeings.BehaviorComposition.Locomotion.MoveTo(VirtualBeings.Tech.BehaviorComposition.IRS,System.Func{UnityEngine.Vector3},System.Nullable{System.Single},System.Int32)">
-             <summary>
-            
-             </summary>
-             <param name="targetRS"></param>
-             <param name="goal"></param>
-             <param name="overrideArrivalDistance">If overriden, the arrival distance wont reset to previous value, it is kept this way until new override</param>
-             <param name="variationIndex">Value between 0 and 5 (included) to specify the walk variation to use></param>
-        </member>
-        <member name="M:VirtualBeings.BehaviorComposition.Locomotion.RequestST(VirtualBeings.Tech.BehaviorComposition.IST,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)">
-            <summary>
-            Request transition to ST (self transition). Note that unlike RS, ST are (1) not guarranteed and
-            (2) interruptible by another ST request or a RS change request
-            </summary>
-        </member>
-        <member name="M:VirtualBeings.BehaviorComposition.Locomotion.SetTargetRS(VirtualBeings.Tech.BehaviorComposition.IRS,VirtualBeings.Tech.BehaviorComposition.ITransitionType,System.Single,System.Single,System.Single,System.Single,System.Single)">
-            <summary>
-            Request new RS (root state); unless overridden by another request (or this behavior looses control),
-            it is guaranteed that this change is eventually successful.
-            NB: transition type needs to be set procedurally for now.
-            </summary>
-            <param name="targetRS"></param>
-            <param name="transitionType">Note that this may be overriden if a functional TransitionType is needed
-            to leave/arrive at an angle etc.</param>
-            <param name="transitionSpeed01"></param>
-            <param name="transitionIntensity01"></param>
-            <param name="transitionLeftRight"></param>
-            <param name="transitionParameterA"></param>
-            <param name="transitionParameterB"></param>
+            <param name="locomotion"></param>
+            <param name="emoter"></param>
+            <param name="interactable"></param>
+            <param name="minPitchForLookDuringMoveTo"></param>
+            <param name="maxPitchForLookDuringMoveTo"></param>
+            <param name="maxYawForLookDuringMoveTo"></param>
+            <param name="averageLookAtInteractableDuration">Duration to look at interactable</param>
+            <param name="averageLookDuringMoveToDuration">Duration to look while moving</param>
+            <param name="averageLookDuringMoveToVariationDuration">How often we should change target when in LookDuringMoveTo</param>
+            <param name="durationVariationFactor">Here 1 means no variation; a good value is 1.25</param>
+            <param name="randomizeEyesDirection"></param>
+            <param name="randomizeLookDirection"></param>
+            <param name="expression"></param>
         </member>
         <member name="T:VirtualBeings.Beings.Floater.Infrastructure.RSFloaterBase">
              <summary>

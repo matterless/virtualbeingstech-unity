@@ -323,8 +323,6 @@ namespace VirtualBeings.Tech.Shared
 
         protected virtual void Awake()
         {
-            Debug.Log(Container);
-            Debug.Log(Container.WorldEvents);
             Init(Container.WorldEvents, Container.InteractionDB, Container.NavigableTerrainManager);
         }
 

@@ -1,4 +1,8 @@
+![VIRTUAL BEINGS banner](Resources~/GitHub%20readme%20banner.jpg)
+
 # VIRTUAL BEINGS Tech - Unity
+
+<img src="Resources~/discord_icon.png" width=16 /> [**VIRTUAL BEINGS Hub on Discord**](https://discord.gg/Md8g2CEjcP)
 
 ## Requirements
 - Unity Version 2021.3 or higher
@@ -7,14 +11,14 @@
 ## How to import VIRTUAL BEINGS tech package into your Unity project
 - Open Package Manager windows in Unity : `Window > Package Manager`.
 
-![image](https://user-images.githubusercontent.com/128504226/226867218-df18b6ca-9977-4e09-a599-7d5e9dd03946.png)
+![image](Resources~/virtualbeingtech%20screenshot%201.png)
 
 - Click on the `+` icon and select `Add package from git URL...`.
 
-![image](https://user-images.githubusercontent.com/128504226/226867580-119c6f85-2921-4247-8805-17250946e1c6.png)
+![image](Resources~/virtualbeingtech%20screenshot%202.png)
 
 - Paste this link : `https://github.com/VIRTUALBEINGS/virtualbeingstech-unity.git`
 
-![image](https://user-images.githubusercontent.com/128504226/226868422-3ea84607-dac3-47f2-86a1-7b0be9b1aaf4.png)
+![image](Resources~/virtualbeingtech%20screenshot%203.png)
 
 - Click `Add` and wait until the import is finished

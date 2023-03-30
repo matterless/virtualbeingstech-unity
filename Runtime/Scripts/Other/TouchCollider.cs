@@ -22,6 +22,11 @@ namespace VirtualBeings.Tech.Shared
         private bool _isInit = false;
         private EventManager _worldEvents;
 
+        private void Awake()
+        {
+            Init(Container.Instance.WorldEvents, Container.Instance.InteractionDB);
+        }
+
         public override void Init(EventManager worldEvents, InteractionDB interactionDB)
         {
             _interactionDB = interactionDB;
