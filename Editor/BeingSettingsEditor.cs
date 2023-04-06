@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
+using UnityEngine;
 using VirtualBeings.Tech.ActiveCognition;
 using VirtualBeings.Tech.BehaviorComposition;
 using static VirtualBeings.Tech.ActiveCognition.BeingSettings;
@@ -44,7 +45,7 @@ namespace VirtualBeings.Tech.Shared
             //    .GetField("RootActivities", BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy)
             //    .GetValue(beingSettings);
 
-            List<MotiveSettings> tempMotives = new List<MotiveSettings>(motives);
+            List<MotiveSettings> tempMotives = new(motives);
 
             // 1 - Remove unused Motives
             // if there is a motive inside birdMotives that do no exist in RAF we remove it.
@@ -52,8 +53,8 @@ namespace VirtualBeings.Tech.Shared
             {
                 MotiveSettings motiveSettings = motives[i];
                 if (motiveSettings == null ||
-                    motiveSettings.MotiveName == null ||
-                    beingSettings.RootActivities.Where(raf => raf.MotiveName != null && raf.MotiveName.Name.Equals(motiveSettings.MotiveName.Name)).Count() == 0)
+                    motiveSettings.RootActivityFactory == null ||
+                    !beingSettings.RootActivities.Any(raf => raf.Equals(motiveSettings.RootActivityFactory)))
                 {
                     tempMotives.Remove(motiveSettings);
                 }
@@ -61,42 +62,45 @@ namespace VirtualBeings.Tech.Shared
 
             // 2 - Add new Motives
             // If there is a motive inside RAF that do not exist in birdMotives, we add it.
-            for (int i = 0; i < beingSettings.RootActivities.Length; ++i)
+            foreach (RootActivityFactory rootActivity in beingSettings.RootActivities)
             {
-                RootActivityFactory rootActivity = beingSettings.RootActivities[i];
-                if (rootActivity == null || rootActivity.MotiveName == null)
+                if (rootActivity == null)
                 {
                     continue;
                 }
                 //tempMotives.ForEach(m => Debug.Log("does motive " + rootActivity.MotiveName.Name m.MotiveName));
-                if (tempMotives.Where(bm => bm.MotiveName.Name.Equals(rootActivity.MotiveName.Name)).Count() == 0)
+                RootActivityFactory activity = rootActivity;
+                if (!tempMotives.Any(bm => bm.RootActivityFactory.Equals(activity)))
                 {
-                    MotiveSettings motiveSettings = new MotiveSettings(rootActivity.MotiveName, 0f);
+                    MotiveSettings motiveSettings = new(rootActivity, 0.5f);
                     tempMotives.Add(motiveSettings);
                 }
             }
 
             EditorGUILayout.PropertyField(rootActivties);
             EditorGUILayout.Space();
-            if (tempMotives.Count <= 0)
-            {
-                EditorGUILayout.LabelField("No Motive(s) selected from Root Activities.", EditorStyles.boldLabel);
-            }
-            else
-            {
-                EditorGUILayout.LabelField("Motives", EditorStyles.boldLabel);
-            }
+            EditorGUILayout.LabelField(
+                tempMotives.Count <= 0 ? "No Motive(s) selected from Root Activities." : "Motives",
+                EditorStyles.boldLabel
+            );
             EditorGUILayout.Space();
 
             foreach (MotiveSettings motiveSettings in tempMotives)
             {
-                if (motiveSettings.MotiveName != null)
+                if (motiveSettings.RootActivityFactory == null)
                 {
-                    EditorGUILayout.BeginHorizontal();
-                    EditorGUILayout.PrefixLabel($"Salience01 {motiveSettings.MotiveName.Name}");
-                    motiveSettings.Salience01 = EditorGUILayout.Slider(motiveSettings.Salience01, 0, 1f);
-                    EditorGUILayout.EndHorizontal();
+                    continue;
                 }
+
+                if (!motiveSettings.RootActivityFactory.HasMotiveAssociated)
+                {
+                    continue;
+                }
+
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.PrefixLabel($"Salience01 {motiveSettings.RootActivityFactory.MotiveName}");
+                motiveSettings.Salience01 = EditorGUILayout.Slider(motiveSettings.Salience01, 0, 1f);
+                EditorGUILayout.EndHorizontal();
             }
             EditorGUILayout.EndFoldoutHeaderGroup();
 

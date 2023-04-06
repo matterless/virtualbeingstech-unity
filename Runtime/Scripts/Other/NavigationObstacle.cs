@@ -17,10 +17,13 @@ namespace VirtualBeings.Tech.Shared
     public class NavigationObstacle : MonoBehaviour, IObstacle
     {
         public ObstacleType ObstacleType { get => _obstacleType; set => _obstacleType = value; }
+        private Container Container => Container.Instance;
 
-        Container Container => Container.Instance;
         [SerializeField]
         private ObstacleType _obstacleType;
+
+        [SerializeField]
+        private float _overrideRefreshPeriod = -1f;
 
         private void Awake()
         {
@@ -42,7 +45,8 @@ namespace VirtualBeings.Tech.Shared
                 switch(ObstacleType)
                 {
                     case ObstacleType.Dynamic:
-                        _terrain.RegisterGameObjectAsObstacle(c.gameObject, _navigableTerrainManager.DynamicAIObstacleRefreshPeriod);
+                        _terrain.RegisterGameObjectAsObstacle(c.gameObject,
+                            _overrideRefreshPeriod > 0f ? _overrideRefreshPeriod : _navigableTerrainManager.DynamicAIObstacleRefreshPeriod);
                         break;
 
                     case ObstacleType.Static:

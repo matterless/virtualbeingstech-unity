@@ -18,7 +18,7 @@ namespace VirtualBeings.Tech.Shared
     /// Contains the data of the player
     /// </summary>
     [BinaryReadableWritableClass]
-    [CreateAssetMenu(fileName = "PlayerDataAssetDb", menuName = "VirtualBeings/PlayerDataAssetDb")]
+    [CreateAssetMenu(fileName = "PlayerDataAssetDb", menuName = "VIRTUAL BEINGS/PlayerDataAssetDb", order = 1)]
     public class PlayerData : ScriptableObject, ISerializationCallbackReceiver
     {
         #region serialized fields and their getter

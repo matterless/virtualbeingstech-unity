@@ -176,7 +176,7 @@
             Called only from Mind.UpdateMotives()
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.ActiveCognition.Motive.#ctor(VirtualBeings.Tech.ActiveCognition.Mind,VirtualBeings.Tech.ActiveCognition.MotiveName,System.Boolean,System.Single,System.Single)">
+        <member name="M:VirtualBeings.Tech.ActiveCognition.Motive.#ctor(VirtualBeings.Tech.ActiveCognition.Mind,VirtualBeings.Tech.BehaviorComposition.RootActivityFactory,System.Boolean,System.Single,System.Single)">
             <summary>
             How is the Value01 of a motive initialized upon instantiation? Simple:
             - If cat was 'very recently' uninstantiated, just use the serialized values.
@@ -784,7 +784,6 @@
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.InteractableMemory.IsInFOV(VirtualBeings.Tech.UnityIntegration.IInteractable)">
-            public interface
             <summary>
             Is interactable being tracked, and is it currently in FOV?
             </summary>
@@ -831,7 +830,6 @@
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.InteractableMemory.TryGetTracked(VirtualBeings.Tech.UnityIntegration.IInteractable,VirtualBeings.Tech.ActiveCognition.TrackedInteractable@)">
-            Public interface for other Gears/Cogs
             <summary>
             Get a TrackedInteractable for an interactable that's already tracked.
             </summary>
@@ -848,7 +846,6 @@
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.InteractableMemory.FindFirstInternal(System.Collections.Generic.LinkedListNode{VirtualBeings.Tech.ActiveCognition.TrackedInteractable},System.Func{VirtualBeings.Tech.ActiveCognition.TrackedInteractable,System.Boolean},System.Int32)">
-            Internals
             <summary>
             Used by Find() methods above; current may be null
             </summary>
@@ -1838,41 +1835,41 @@
             Speed target easing over distance
             </summary>
         </member>
-        <member name="P:VirtualBeings.Tech.BehaviorComposition.LookAround.DirectionalTargetFunc">
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Animals.LookAround.DirectionalTargetFunc">
             <summary>
             This is the 'directional target', it serves as a reference point to look around from - if null, forward is used
             </summary>
         </member>
-        <member name="P:VirtualBeings.Tech.BehaviorComposition.LookAround.AvoidanceTargetInteractable">
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Animals.LookAround.AvoidanceTargetInteractable">
             <summary>
             Optionally, an Interactable we want to avoid (often the player)
             </summary>
         </member>
-        <member name="P:VirtualBeings.Tech.BehaviorComposition.LookAround.BodyWeight">
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Animals.LookAround.BodyWeight">
             <summary>
             (Only relevant for humanoids) [0,1] Determines how much the body is involved in the LookAt.
             One should be careful when using high values for the body, as it can end-up with un-natural poses when
             the look target is in "extreme" places (e.g. behind).
             </summary>
         </member>
-        <member name="P:VirtualBeings.Tech.BehaviorComposition.LookAround.ClampLookWeight">
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Animals.LookAround.ClampLookWeight">
             <summary>
             (Only relevant for humanoids) [0,1] 0 means the being in unrestrained in motion.
             1 means the character is clamped (LookAt becomes impossible). 0.5 means the being is able to move on half its
             possible motion range.
             </summary>
         </member>
-        <member name="P:VirtualBeings.Tech.BehaviorComposition.LookAround.EyesClosed01">
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Animals.LookAround.EyesClosed01">
             <summary>
             How much eyes should be closed, from 0 (same as base expression) to 1 (eyes closed)
             </summary>
         </member>
-        <member name="P:VirtualBeings.Tech.BehaviorComposition.LookAround.IsDistracted">
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Animals.LookAround.IsDistracted">
             <summary>
             Are we currently looking at a distracting event?
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.LookAround.#ctor(VirtualBeings.Tech.BehaviorComposition.IActivity,VirtualBeings.Tech.BehaviorComposition.IEmoter,System.Func{UnityEngine.Vector3},System.Single,System.Single,System.Single,System.Single,System.Int32,System.Single,System.Single,System.Single,VirtualBeings.Tech.UnityIntegration.IInteractable,System.Single,System.Nullable{VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper})">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Animals.LookAround.#ctor(VirtualBeings.Tech.BehaviorComposition.IActivity,VirtualBeings.Tech.BehaviorComposition.IEmoter,System.Func{UnityEngine.Vector3},System.Single,System.Single,System.Single,System.Single,System.Int32,System.Single,System.Single,System.Single,VirtualBeings.Tech.UnityIntegration.IInteractable,System.Single,System.Nullable{VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper})">
             <summary>
             TODO
             </summary>
@@ -1894,10 +1891,183 @@
             <param name="minAngleToGlobalPositionToAvoid"></param>
             <param name="expression"></param>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.LookAround.Push(UnityEngine.Vector2@,UnityEngine.Vector2,System.Single,VirtualBeings.Tech.BehaviorComposition.LookAround.Bounds,VirtualBeings.Tech.BehaviorComposition.LookAround.Bounds)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Animals.LookAround.Push(UnityEngine.Vector2@,UnityEngine.Vector2,System.Single,VirtualBeings.Tech.BehaviorComposition.Animals.LookAround.Bounds,VirtualBeings.Tech.BehaviorComposition.Animals.LookAround.Bounds)">
             <summary>
             Ensure that target is at least distance 'minAngle' away from pushFrom by pushing target linearly away
             </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Animals.LookIntermittent.EyesClosed01_OnInteractable">
+            <summary>
+            How much eyes should be closed while looking at interactable, from 0 (same as base expression) to 1 (eyes closed)
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Animals.LookIntermittent.IsDistracted">
+            <summary>
+            Are we currently looking at a distracting event?
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Animals.LookIntermittent.MaxDistractionDuration">
+            <summary>
+            Look at distraction (if available)?
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Animals.LookIntermittent.#ctor(VirtualBeings.Tech.BehaviorComposition.IActivity,VirtualBeings.Tech.BehaviorComposition.IEmoter,VirtualBeings.Tech.UnityIntegration.IInteractable,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Nullable{VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper})">
+            <summary>
+             Toggle between looking at a target and just looking around
+            </summary>
+            <param name="parent"></param>
+            <param name="emoter"></param>
+            <param name="interactable"></param>
+            <param name="headWeight">How much this look control the head [0 ; 1]</param>
+            <param name="averageLookAtInteractableDuration">Duration to look at interactable</param>
+            <param name="averageLookAroundDuration">Duration to look around</param>
+            <param name="averageLookAroundVariationDuration">How much variation for duration do we want when looking at interactable. 1 = no variation. 2 = 2 times slower to 2 times faster.</param>
+            <param name="minAngleToPreviousForLookAround"></param>
+            <param name="minPitchForLookAround">TODO</param>
+            <param name="maxPitchForLookAround">TODO</param>
+            <param name="maxYawForLookAround">TODO</param>
+            <param name="minAvoidanceAngleForLookAround">TODO</param>
+            <param name="durationVariationFactor">Here 1 means no variation; a good value is 1.25</param>
+            <param name="expression"></param>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Animals.LookWatchfullyAndVocalize.EyesClosed01">
+            <summary>
+            How much eyes should be closed while looking, from 0 (same as base expression) to 1 (eyes closed)
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Animals.LookWatchfullyAndVocalize.MaxDistractionDuration">
+            <summary>
+            Look at distraction (if available)?
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Animals.LookWatchfullyAndVocalize.TimeToFirstVocalization">
+            <summary>
+            Configuration of subactivity Vocalize
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Animals.LookWatchfullyAndVocalize.#ctor(VirtualBeings.Tech.BehaviorComposition.IActivity,VirtualBeings.Tech.BehaviorComposition.IEmoter,VirtualBeings.Tech.UnityIntegration.IInteractable,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,VirtualBeings.Tech.BehaviorComposition.IAdditiveExpression,System.Nullable{VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper})">
+            <summary>
+            Toggle between looking at a target and just looking around
+            </summary>
+            <param name="parent"></param>
+            <param name="emoter"></param>
+            <param name="interactable"></param>
+            <param name="headWeight"></param>
+            <param name="averageLookAtInteractableDuration"></param>
+            <param name="averageLookAroundDuration"></param>
+            <param name="averageLookAroundVariationDuration"></param>
+            <param name="minAngleToPreviousForLookAround"></param>
+            <param name="minPitchForLookAround"></param>
+            <param name="maxPitchForLookAround"></param>
+            <param name="maxYawForLookAround"></param>
+            <param name="minAvoidanceAngleForLookAround"></param>
+            <param name="durationVariationFactor">Here 1 means no variation; a good value is 1.25</param>
+            <param name="timeToFirstVocalization"></param>
+            <param name="averagePauseBetweenVocalizations"></param>
+            <param name="vocalizationDurationVariationFactor"></param>
+            <param name="preferredVocalization"></param>
+            <param name="expression"></param>
+        </member>
+        <member name="T:VirtualBeings.Tech.BehaviorComposition.Animals.LookWatchfullyAndVocalize.Vocalize">
+            Subactivities
+            <summary>
+            </summary>
+        </member>
+        <member name="T:VirtualBeings.Tech.BehaviorComposition.Humanoids.LookAround">
+            <summary>
+            Look around for the humanoids.
+            Decoupled in two main phases.
+            First, the being looks around a principal direction only moving the eyes. Then, he starts a more important
+            movement, where the eyes move first, then the head follows after a slight delay.
+            The look target is picked randomly in [minPitch, maxPitch) and [-maxYaw, maxYaw).
+            </summary>
+        </member>
+        <member name="E:VirtualBeings.Tech.BehaviorComposition.Humanoids.LookAround.OnNewLookTarget">
+            <summary>
+            Event called when a new look target is picked and the head starts moving towards it.
+            The first parameter is the new look target, the second parameter is the old one.
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Humanoids.LookAround.MinPitch">
+            <summary>
+            The minimum allowed pitch (negative pitch means looking up)
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Humanoids.LookAround.MaxPitch">
+            <summary>
+            The maximum allowed pitch
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Humanoids.LookAround.MaxYaw">
+            <summary>
+            The maximum allowed yaw
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Humanoids.LookAround.FirstPhaseDuration">
+            <summary>
+            The duration of the first phase
+            (looking at a direction, with a slight head offset and randomized eyes movements)
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Humanoids.LookAround.FirstPhaseDurationVariation">
+            <summary>
+            How much variation for duration is allowed. Must be at least 1.
+            1 means no variation, 2 (e.g.) means duration can range from duration / 2 to duration * 2.
+            1.25 is usually a good value.
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Humanoids.LookAround.SecondPhaseDuration">
+            <summary>
+            The duration of the second phase (moving to a a new target)
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Humanoids.LookAround.SecondPhaseDurationVariation">
+            <summary>
+            How much variation for duration is allowed. Must be at least 1.
+            1 means no variation, 2 (e.g.) means duration can range from duration / 2 to duration * 2.
+            1.25 is usually a good value.
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Humanoids.LookAround.HeadFollowingMinDelay">
+            <summary>
+            Minimum time we should wait before starting moving the head after picking
+            a new target
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Humanoids.LookAround.HeadFollowingMaxDelay">
+            <summary>
+            Maximum time we should wait before starting moving the head after picking
+            a new target
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Humanoids.LookAround.#ctor(VirtualBeings.Tech.BehaviorComposition.IActivity,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Nullable{UnityEngine.Vector3},System.Nullable{VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper})">
+            <summary>
+            </summary>
+            <param name="parent"></param>
+            <param name="minPitch">The minimum allowed pitch (negative pitch means looking up)</param>
+            <param name="maxPitch">The maximum allowed pitch</param>
+            <param name="maxYaw">The maximum allowed yaw</param>
+            <param name="firstPhaseDuration">
+            The duration of the first phase
+            (looking at a direction, with a slight head offset and randomized eyes movements)
+            </param>
+            <param name="firstPhaseDurationVariation">
+            How much variation for duration is allowed. Must be at least 1.
+            1 means no variation, 2 (e.g.) means duration can range from duration / 2 to duration * 2.
+            1.25 is usually a good value.
+            </param>
+            <param name="secondPhaseDuration">The duration of the second phase (moving to a a new target)</param>
+            <param name="secondPhaseDurationVariation">
+            How much variation for duration is allowed. Must be at least 1.
+            1 means no variation, 2 (e.g.) means duration can range from duration / 2 to duration * 2.
+            1.25 is usually a good value.
+            </param>
+            <param name="headFollowingMinDelay">Minimum time we should wait before starting moving the head after picking
+            a new target</param>
+            <param name="headFollowingMaxDelay">Maximum time we should wait before starting moving the head after picking
+            a new target</param>
+            <param name="initialTarget">An eventual first target. Will look straight if not set.</param>
+            <param name="expression"></param>
         </member>
         <member name="M:VirtualBeings.Tech.BehaviorComposition.VoiceDomainActuator.Initialize">
             <summary>
@@ -2153,14 +2323,14 @@
             Are we currently looking at a distracting event?
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.LookBase.#ctor(VirtualBeings.Tech.BehaviorComposition.IActivity,VirtualBeings.Tech.UnityIntegration.IInteractable,System.Boolean,System.Boolean,System.Single,VirtualBeings.Tech.BehaviorComposition.IEmoter,System.Nullable{VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper})">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.LookBase.#ctor(VirtualBeings.Tech.BehaviorComposition.IActivity,VirtualBeings.Tech.UnityIntegration.IInteractable,System.Boolean,System.Boolean,System.Single,VirtualBeings.Tech.BehaviorComposition.IEmoter,VirtualBeings.BehaviorComposition.ILookTargetStabilizer,System.Nullable{VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper})">
             <summary>
             Use this constructor to look (initially) at an IInteractable. Can be null, and can later be changed to a Func(Vector3).
             If null, the being will look straight ahead into the distance.
             NB: eye weight always defaults to 1
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.LookBase.#ctor(VirtualBeings.Tech.BehaviorComposition.IActivity,System.Func{UnityEngine.Vector3},System.Boolean,System.Boolean,System.Single,VirtualBeings.Tech.BehaviorComposition.IEmoter,System.Nullable{VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper})">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.LookBase.#ctor(VirtualBeings.Tech.BehaviorComposition.IActivity,System.Func{UnityEngine.Vector3},System.Boolean,System.Boolean,System.Single,VirtualBeings.Tech.BehaviorComposition.IEmoter,VirtualBeings.BehaviorComposition.ILookTargetStabilizer,System.Nullable{VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper})">
             <summary>
             Use this constructor to look (initially) at a position provided by a Func(Vector3). Can be null, and can later be changed to an IInteractable.
             If null, the being will look straight ahead into the distance.
@@ -2253,40 +2423,6 @@
             The LookSpeediness to use for this look. See LookBase.LookSpeediness.
             </summary>
         </member>
-        <member name="P:VirtualBeings.Tech.BehaviorComposition.LookIntermittent.EyesClosed01_OnInteractable">
-            <summary>
-            How much eyes should be closed while looking at interactable, from 0 (same as base expression) to 1 (eyes closed)
-            </summary>
-        </member>
-        <member name="P:VirtualBeings.Tech.BehaviorComposition.LookIntermittent.IsDistracted">
-            <summary>
-            Are we currently looking at a distracting event?
-            </summary>
-        </member>
-        <member name="P:VirtualBeings.Tech.BehaviorComposition.LookIntermittent.MaxDistractionDuration">
-            <summary>
-            Look at distraction (if available)?
-            </summary>
-        </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.LookIntermittent.#ctor(VirtualBeings.Tech.BehaviorComposition.IActivity,VirtualBeings.Tech.BehaviorComposition.IEmoter,VirtualBeings.Tech.UnityIntegration.IInteractable,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Nullable{VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper})">
-            <summary>
-             Toggle between looking at a target and just looking around
-            </summary>
-            <param name="parent"></param>
-            <param name="emoter"></param>
-            <param name="interactable"></param>
-            <param name="headWeight">How much this look control the head [0 ; 1]</param>
-            <param name="averageLookAtInteractableDuration">Duration to look at interactable</param>
-            <param name="averageLookAroundDuration">Duration to look around</param>
-            <param name="averageLookAroundVariationDuration">How much variation for duration do we want when looking at interactable. 1 = no variation. 2 = 2 times slower to 2 times faster.</param>
-            <param name="minAngleToPreviousForLookAround"></param>
-            <param name="minPitchForLookAround">TODO</param>
-            <param name="maxPitchForLookAround">TODO</param>
-            <param name="maxYawForLookAround">TODO</param>
-            <param name="minAvoidanceAngleForLookAround">TODO</param>
-            <param name="durationVariationFactor">Here 1 means no variation; a good value is 1.25</param>
-            <param name="expression"></param>
-        </member>
         <member name="T:VirtualBeings.Tech.BehaviorComposition.LookSimple">
             <summary>
             General-purpose encapsulation for LookAt that is distractible and that optionally varies pitch/yaw
@@ -2303,14 +2439,14 @@
             Change look target (can be null)
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.LookSimple.#ctor(VirtualBeings.Tech.BehaviorComposition.IActivity,VirtualBeings.Tech.UnityIntegration.IInteractable,System.Boolean,System.Boolean,System.Single,VirtualBeings.Tech.BehaviorComposition.IEmoter,System.Nullable{VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper})">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.LookSimple.#ctor(VirtualBeings.Tech.BehaviorComposition.IActivity,VirtualBeings.Tech.UnityIntegration.IInteractable,System.Boolean,System.Boolean,System.Single,VirtualBeings.Tech.BehaviorComposition.IEmoter,System.Nullable{VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper},VirtualBeings.BehaviorComposition.ILookTargetStabilizer)">
             <summary>
             Use this constructor to look (initially) at an IInteractable. Can be null, and can later be changed to a Func(Vector3).
             If null, the being will look straight ahead into the distance.
             <param name="headWeight">[0,1] Determines how much the head is involved in the LookAt</param>
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.LookSimple.#ctor(VirtualBeings.Tech.BehaviorComposition.IActivity,System.Func{UnityEngine.Vector3},System.Boolean,System.Boolean,System.Single,VirtualBeings.Tech.BehaviorComposition.IEmoter,System.Nullable{VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper})">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.LookSimple.#ctor(VirtualBeings.Tech.BehaviorComposition.IActivity,System.Func{UnityEngine.Vector3},System.Boolean,System.Boolean,System.Single,VirtualBeings.Tech.BehaviorComposition.IEmoter,System.Nullable{VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper},VirtualBeings.BehaviorComposition.ILookTargetStabilizer)">
             <summary>
             Use this constructor to look (initially) at a position provided by a Func(Vector3). Can be null, and can later be changed to an IInteractable.
             If null, the being will look straight ahead into the distance.
@@ -2334,49 +2470,6 @@
             <summary>
             Look (initially) at a position provided by a Func(Vector3). Can be null, and can later be changed to an IInteractable.
             If null, the being will look straight ahead into the distance.
-            </summary>
-        </member>
-        <member name="P:VirtualBeings.Tech.BehaviorComposition.LookWatchfullyAndVocalize.EyesClosed01">
-            <summary>
-            How much eyes should be closed while looking, from 0 (same as base expression) to 1 (eyes closed)
-            </summary>
-        </member>
-        <member name="P:VirtualBeings.Tech.BehaviorComposition.LookWatchfullyAndVocalize.MaxDistractionDuration">
-            <summary>
-            Look at distraction (if available)?
-            </summary>
-        </member>
-        <member name="P:VirtualBeings.Tech.BehaviorComposition.LookWatchfullyAndVocalize.TimeToFirstVocalization">
-            <summary>
-            Configuration of subactivity Vocalize
-            </summary>
-        </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.LookWatchfullyAndVocalize.#ctor(VirtualBeings.Tech.BehaviorComposition.IActivity,VirtualBeings.Tech.BehaviorComposition.IEmoter,VirtualBeings.Tech.UnityIntegration.IInteractable,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,VirtualBeings.Tech.BehaviorComposition.IAdditiveExpression,System.Nullable{VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper})">
-            <summary>
-            Toggle between looking at a target and just looking around
-            </summary>
-            <param name="parent"></param>
-            <param name="emoter"></param>
-            <param name="interactable"></param>
-            <param name="headWeight"></param>
-            <param name="averageLookAtInteractableDuration"></param>
-            <param name="averageLookAroundDuration"></param>
-            <param name="averageLookAroundVariationDuration"></param>
-            <param name="minAngleToPreviousForLookAround"></param>
-            <param name="minPitchForLookAround"></param>
-            <param name="maxPitchForLookAround"></param>
-            <param name="maxYawForLookAround"></param>
-            <param name="minAvoidanceAngleForLookAround"></param>
-            <param name="durationVariationFactor">Here 1 means no variation; a good value is 1.25</param>
-            <param name="timeToFirstVocalization"></param>
-            <param name="averagePauseBetweenVocalizations"></param>
-            <param name="vocalizationDurationVariationFactor"></param>
-            <param name="preferredVocalization"></param>
-            <param name="expression"></param>
-        </member>
-        <member name="T:VirtualBeings.Tech.BehaviorComposition.LookWatchfullyAndVocalize.Vocalize">
-            Subactivities
-            <summary>
             </summary>
         </member>
         <member name="T:VirtualBeings.Tech.BehaviorComposition.ActivityT`1">
@@ -5240,11 +5333,11 @@
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.Beings.Bird.BirdRootActivity`1.ReturnMinSatisfierPriorityWhileActive">
-            <summary>
-            If RA is active, this virtual method can be overridden to force CalculatePriority to return min priority for satisfiers.
+             <summary>
+             If RA is active, this virtual method can be overridden to force CalculatePriority to return min priority for satisfiers.
             
-            Can be overridden by methods such as BeSafe, who need to be essentially uninterruptible by other Satisfiers.
-            </summary>
+             Can be overridden by methods such as BeSafe, who need to be essentially uninterruptible by other Satisfiers.
+             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.Beings.Bird.BirdRootActivity`1.CalculatePriorityFromMotive(System.Single)">
             Private stuff
@@ -9452,6 +9545,11 @@
             <param name="randomizeEyesDirection"></param>
             <param name="randomizeLookDirection"></param>
             <param name="expression"></param>
+        </member>
+        <member name="P:VirtualBeings.BehaviorComposition.ILookTargetStabilizer.CatchThreshold">
+            <summary>
+            Threshold angle in degrees that determines when we should start moving the head while looking at a target.
+            </summary>
         </member>
         <member name="T:VirtualBeings.Beings.Floater.Infrastructure.RSFloaterBase">
              <summary>

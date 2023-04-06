@@ -171,6 +171,12 @@ namespace VirtualBeings.Tech.Shared
                 _perBeingResources[i].NavServer.UnregisterGameObjectAsObstacle(go);
         }
 
+        [Obsolete("This method is only used for the (early) CaaS demo and will be removed soon")]
+        public void GetDebugPath(Vector3 start, Vector3 goal, float clearance, List<Vector3> resultBuffer)
+        {
+            _perBeingResources[0].NavServer.GetDebugPath(start, goal, clearance, resultBuffer);
+        }
+
         public NavigationServerSynchronous GetNewNavServerAndRegisterBeing(int beingID, GameObject[] gosWithCollidersOnBeing, float borderOffset,
             out int ownCharacterLayer, out LayerMask otherCharactersLayerMask)
         {
@@ -310,10 +316,9 @@ namespace VirtualBeings.Tech.Shared
 
         private void Update()
         {
-#if UNITY_EDITOR
-            for (int i = 0; i < _perBeingResources.Length; i++)
-                _perBeingResources[i].NavServer.ShowDebugMesh = i == IndexOfVisualizedDebugMesh;
-#endif
+            if (NavigableTerrainSettings.LineSegmentVisualizer != null || Application.isEditor)
+                for (int i = 0; i < _perBeingResources.Length; i++)
+                    _perBeingResources[i].NavServer.ShowDebugMesh = i == IndexOfVisualizedDebugMesh;
 
             for (int i = 0; i < _perBeingResources.Length; i++)
                 _perBeingResources[i].NavServer.UpdateOncePerFrame();
@@ -363,12 +368,17 @@ namespace VirtualBeings.Tech.Shared
             //_perBeingResources = new PerBeingResources[nNavServers];
             _perBeingResources = new PerBeingResources[1]; // TODO(RAPH)
 
+            LineSegmentVisualizer visualizer = NavigableTerrainSettings.LineSegmentVisualizer == null
+                ? null
+                : Instantiate(NavigableTerrainSettings.LineSegmentVisualizer, transform).GetComponent<LineSegmentVisualizer>();
+
             for (int i = 0; i < nNavServers; i++)
             {
                 _perBeingResources[i] = new PerBeingResources
                 {
                     NavServer = new NavigationServerSynchronous(transform, BoundingBoxForNavServer, NavigableTerrainSettings.Epsilon,
-                        NavigableTerrainSettings.TimeInMsPerFrameForNavMeshProcessing, false, NavigableTerrainSettings.YValueForDebugMesh),
+                        NavigableTerrainSettings.TimeInMsPerFrameForNavMeshProcessing, false,
+                        NavigableTerrainSettings.YValueForDebugMesh, visualizer),
                     Layer = assignableLayers[i],
                 };
             }
@@ -422,6 +432,7 @@ namespace VirtualBeings.Tech.Shared
             public float YValueForDebugMesh = .01f;
             public float UpdateFrequencyForBeingsInSeconds = .33f;
             public LayerMask AssignableCharacterLayers = 1 << 0; // default layer (0)
+            public GameObject LineSegmentVisualizer = null; // unused if null
         }
     }
 }

@@ -34,15 +34,15 @@ namespace VirtualBeings.Tech.Shared
             EditorGUILayout.BeginVertical();
             if (settings.IsKeyValid())
             {
-                EditorGUILayout.LabelField("Key is valid.", configuredStyle);
-                EditorGUILayout.LabelField($"You have access to :");
-                EditorGUILayout.LabelField($"{subscriptionData.MainCharacter} main character(s)");
-                EditorGUILayout.LabelField($"{subscriptionData.SideCharacter} side character(s)");
-                EditorGUILayout.LabelField($"{subscriptionData.BackgroundCharacter} background character(s)");
+                //EditorGUILayout.LabelField("Key is valid.", configuredStyle);
+                //EditorGUILayout.LabelField($"You have access to :");
+                //EditorGUILayout.LabelField($"{subscriptionData.MainCharacter} main character(s)");
+                //EditorGUILayout.LabelField($"{subscriptionData.SideCharacter} side character(s)");
+                //EditorGUILayout.LabelField($"{subscriptionData.BackgroundCharacter} background character(s)");
             }
             else
             {
-                EditorGUILayout.LabelField("Key is not valid.", notConfiguredStyle);
+                //EditorGUILayout.LabelField("Key is not valid.", notConfiguredStyle);
             }
             EditorGUILayout.EndVertical();
 
