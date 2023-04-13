@@ -3718,7 +3718,7 @@
             Generic Idle functionality that make the being feel alive without doing anything
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Locomotion.MoveTo(VirtualBeings.Tech.BehaviorComposition.IRS,System.Func{UnityEngine.Vector3},System.Nullable{System.Single},System.Int32)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Locomotion.MoveTo(VirtualBeings.Tech.BehaviorComposition.IRS,System.Func{UnityEngine.Vector3},System.Nullable{System.Single},System.Int32,System.Boolean)">
              <summary>
             
              </summary>
