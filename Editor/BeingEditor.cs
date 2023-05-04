@@ -84,11 +84,19 @@ namespace VirtualBeings.Tech.UnityIntegration
 
                 if (GUILayout.Button("Configure Being", GUILayout.Width(255)))
                 {
-                    string assetPath = AssetDatabase.GetAssetPath(being);
+                    string assetPath = AssetDatabase.GetAssetPath(being.TopLevelParent);
+                    if (assetPath == null || assetPath == String.Empty)
+                    {
+                        assetPath = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(being.TopLevelParent);
+                    }
 
+                    // If the prefab file was not found
+                    if (assetPath == null || assetPath == String.Empty)
+                    {
+                        Debug.LogWarning("You need to create a prefab of your being if you want to configure a being from the editor.");
+                    }
                     // We have already opened the being prefab
-                    if ((assetPath == null || assetPath == String.Empty) &&
-                        (PrefabStageUtility.GetCurrentPrefabStage()?.prefabContentsRoot == being.TopLevelParent))
+                    else if (PrefabStageUtility.GetCurrentPrefabStage()?.prefabContentsRoot == being.TopLevelParent)
                     {
                         ConfigureBeing(being);
                     }
@@ -111,11 +119,19 @@ namespace VirtualBeings.Tech.UnityIntegration
 
                 if (isBeingConfigured && GUILayout.Button("Reset", GUILayout.Width(255)))
                 {
-                    string assetPath = AssetDatabase.GetAssetPath(being);
+                    string assetPath = AssetDatabase.GetAssetPath(being.TopLevelParent);
+                    if (assetPath == null || assetPath == String.Empty)
+                    {
+                        assetPath = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(being.TopLevelParent);
+                    }
 
+                    // If the prefab file was not found
+                    if (assetPath == null || assetPath == String.Empty)
+                    {
+                        Debug.LogWarning("You need to create a prefab of your being if you want to configure a being from the editor.");
+                    }
                     // We have already opened the being prefab
-                    if ((assetPath == null || assetPath == String.Empty) &&
-                        (PrefabStageUtility.GetCurrentPrefabStage()?.prefabContentsRoot == being.TopLevelParent))
+                    else if (PrefabStageUtility.GetCurrentPrefabStage()?.prefabContentsRoot == being.TopLevelParent)
                     {
                         ResetBeing(being);
                     }

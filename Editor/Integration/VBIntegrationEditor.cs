@@ -16,7 +16,7 @@ public class VBIntegrationEditor : EditorWindow
     private VirtualBeingsSettings _vbSettings;
     private TextField _tokenField;
 
-    [MenuItem("Virtual Beings/Settings")]
+    [MenuItem("VIRTUAL BEINGS/Settings")]
     public static void ShowExample()
     {
         VBIntegrationEditor wnd = GetWindow<VBIntegrationEditor>();
@@ -67,7 +67,7 @@ public class VBIntegrationEditor : EditorWindow
 
         //GameObject beingInstallerPrefab = AssetDatabase.LoadAssetAtPath("Packages/com.virtualbeings.tech.virtualbeingstech/Runtime/Prefabs/BeingInstaller.prefab", typeof(GameObject)) as GameObject;
 
-       
+
         _vbSettings.Key = _tokenField.text;
         //BeingInstallerSettings beingInstallerSettings = ObjectFactory.CreateInstance<Material>();
         //material.shader = Shader.Find("Transparent/Diffuse");

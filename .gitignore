@@ -1,2 +1,11 @@
 [Vv]irtual[Bb]eings[Tt]ech.pdb
 [Vv]irtual[Bb]eings[Tt]ech.pdb.meta
+
+# Custom stuff #
+###################
+TestApp/bin
+TestApp/obj
+bin
+obj
+.vs
+tmp

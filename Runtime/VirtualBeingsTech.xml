@@ -3305,8 +3305,9 @@
         </member>
         <member name="M:VirtualBeings.Tech.BehaviorComposition.RootDomainActuator.SetOrTransitionStateTransitionParameters(System.Single)">
             <summary>
-            Called at the beginning of a RS/ST change, this method changes parameters used to configure transitional states; it either sets
-            them directly or transitions them by making the Actuator enumerate RootParameterTransitioning_Enumerator() on the 'RootParameterTransitioning' domain.
+            Called at the beginning of a RS/ST change, this method changes parameters used to configure transitional states;
+            it either sets them directly or transitions them by making the Actuator enumerate
+            RootParameterTransitioning_Enumerator() on the 'RootParameterTransitioning' domain.
             Transitioning is necessary when an ST/RS is transitioned to using CrossFade rather than Play.
             </summary>
         </member>
@@ -3449,6 +3450,11 @@
             <param name="target"></param>
             <exception cref="T:System.Exception"></exception>
         </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Being.InteractionDB">
+            <summary>
+            Can be null
+            </summary>
+        </member>
         <member name="P:VirtualBeings.Tech.BehaviorComposition.Being.RSNone">
             <summary>
             Use this property as a *seed* to construct any <see cref="T:VirtualBeings.Tech.BehaviorComposition.IRS"/> from server code
@@ -3517,13 +3523,6 @@
         <member name="P:VirtualBeings.Tech.BehaviorComposition.Being.IsStarted">
             <summary>
             Is this being is initialized and started on the current context ?
-            </summary>
-        </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Being.IsInPlayerArea(System.Single)">
-            <summary>
-            Determine if being is inside player area and
-            - if margin is positive: at least 'margin' inside of it;
-            - if margin is negative: at most '-margin' away from it
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.BehaviorComposition.Being.ReceiveCommunicativeActFromOther(VirtualBeings.Tech.UnityIntegration.AgentEvent_CommunicativeAct)">
@@ -3713,27 +3712,18 @@
             Used for direction calculation inside TakeOff
             </summary>
         </member>
-        <member name="T:VirtualBeings.Tech.BehaviorComposition.Idle">
+        <member name="T:VirtualBeings.Tech.BehaviorComposition.Stay">
             <summary>
-            Generic Idle functionality that make the being feel alive without doing anything
+            TODO
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Locomotion.MoveTo(VirtualBeings.Tech.BehaviorComposition.IRS,System.Func{UnityEngine.Vector3},System.Nullable{System.Single},System.Int32,System.Boolean)">
-             <summary>
-            
-             </summary>
-             <param name="targetRS"></param>
-             <param name="goal"></param>
-             <param name="overrideArrivalDistance">If overriden, the arrival distance wont reset to previous value, it is kept this way until new override</param>
-             <param name="variationIndex">Value between 0 and 5 (included) to specify the walk variation to use></param>
-        </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Locomotion.RequestST(VirtualBeings.Tech.BehaviorComposition.IST,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Stay.RequestST(VirtualBeings.Tech.BehaviorComposition.IST,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)">
             <summary>
             Request transition to ST (self transition). Note that unlike RS, ST are (1) not guarranteed and
             (2) interruptible by another ST request or a RS change request
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Locomotion.SetTargetRS(VirtualBeings.Tech.BehaviorComposition.IRS,VirtualBeings.Tech.BehaviorComposition.ITransitionType,System.Single,System.Single,System.Single,System.Single,System.Single)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Stay.SetTargetRS(VirtualBeings.Tech.BehaviorComposition.IRS,VirtualBeings.Tech.BehaviorComposition.ITransitionType,System.Single,System.Single,System.Single,System.Single,System.Single)">
             <summary>
             Request new RS (root state); unless overridden by another request (or this behavior looses control),
             it is guaranteed that this change is eventually successful.
@@ -4072,6 +4062,24 @@
             Wander in the open space.
             Choose a chunk randomly ?
             GO to this chunk
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.FloatToBehavior.Goal">
+            <summary>
+            Goal in world-space
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.FloatToBehavior.Start(VirtualBeings.Tech.BehaviorComposition.IRS,VirtualBeings.Tech.BehaviorComposition.IRS,UnityEngine.Vector3,System.Single)">
+            <summary>
+            Configurable starter
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.FloatToBehavior.FloatPhysic">
+            <summary>
+            Make the being float in 3 step :
+            1 - Taking off vertically
+            2 - Floating on top of the goal
+            3 - Landing down on the goal
             </summary>
         </member>
         <member name="T:VirtualBeings.Tech.BehaviorComposition.FSInfo">
@@ -6530,7 +6538,7 @@
         </member>
         <member name="T:VirtualBeings.Tech.UnityIntegration.IObstacle">
             <summary>
-            Considered as an obstacle in the KuteEngine's navigation system 
+            Considered as an obstacle in the KuteEngine's navigation system
             </summary>
         </member>
         <member name="T:VirtualBeings.Tech.UnityIntegration.NavigableTerrainManager">
@@ -6538,11 +6546,13 @@
             Manage all navigable terrain in the current context.
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.UnityIntegration.NavigableTerrainManager.GetClosestNavigableTerrain(UnityEngine.Vector3)">
+        <member name="M:VirtualBeings.Tech.UnityIntegration.NavigableTerrainManager.FindOwningNavigableTerrain(UnityEngine.Vector3,System.Single,System.Single)">
             <summary>
-            TODO
+            Get the first NavigableTerrain that contains the given position.
             </summary>
             <param name="position"></param>
+            <param name="yOffset"></param>
+            <param name="margin"></param>
             <returns></returns>
         </member>
         <member name="T:VirtualBeings.Tech.UnityIntegration.SoundManager">
@@ -6735,6 +6745,73 @@
             TODO in the future, change to ExtensibleEnum
             </summary>
         </member>
+        <member name="F:VirtualBeings.Tech.UnityIntegration.DistressType.Blocked">
+            <summary>
+            we are trapped by an obstacle and cannot get back to spawnpoint
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.UnityIntegration.DistressType.NearlyBlocked">
+            <summary>
+            we are dangerously close to an obstacle
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.UnityIntegration.DistressType.Oversteering">
+            <summary>
+            steering is unable to avoid an obstacle adequately, making collision likely,
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.NavigationCollider">
+            <summary>
+            The collider defining the navigable area
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.Transform">
+            <summary>
+            The transform of the navigable terrain
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.Margin">
+            <summary>
+            The margin around the collider bounds, defining the navmesh total area. This can be used to allow some
+            wiggle room in the case of noisy or moving navigation colliders. If the collider happens to be too big or
+            moving outside of that margin
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.RefreshRate">
+            <summary>
+            The main collider refresh rate. Useful in the case of a movable collider, or if the input can vary a bit
+            (e.g. AR Planes).
+            Can be -1 to disable it and save resources in case of a static collider.
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.DefineNavigableTerrainInLocalSpace">
+            <summary>
+            Whether the navigation mesh should be defined relative to it's container game object or in world space.
+            Should be set to true for movable platforms for example.
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.Epsilon">
+            <summary>
+            Epsilon determines the threshold in distance between two vertices below which they are
+            considered indistinct. A larger value will result in more greatly deformed constraints
+            (but also in a navmesh with fewer elements and fewer small triangles).
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.MaxTimePerFrameForNavigationProcessingInMs">
+            <summary>
+            The time per frame allowed for navigation updates (in Milliseconds).
+            When getting above this value, processings are deferred to the next frame.
+            The higher the value, the most changes that are allowed to be processed on a single frame,
+            but the higher the risk of getting bad performance hits on some frames.
+            Also keep in mind that this is *per* navigable terrain (so that can add-up in worst cases where many
+            things are happening in multiple nav terrains).
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.LineSegmentVisualizer">
+            <summary>
+            Optional debug visualizer for the underlying navmesh
+            </summary>
+        </member>
         <member name="M:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.RegisterGameObjectAsObstacle(UnityEngine.GameObject,System.Single,System.Single)">
             <summary>
             Call RegisterGameObjectAsObstacle for all navservers
@@ -6745,38 +6822,74 @@
             Call UnregisterGameObjectAsObstacle for all navservers
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.GetNewNavServerAndRegisterBeing(System.Int32,UnityEngine.GameObject[],System.Single,System.Int32@,UnityEngine.LayerMask@)">
+        <member name="M:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.IsInsideBounds(UnityEngine.Vector3,System.Single,System.Single)">
             <summary>
-            Get a NavServer which contains all other registered beings *except* for the calling being
+            Return true if the given position is inside this NavigableTerrain.
             </summary>
-            <param name="beingID"></param>
-            <param name="gosWithCollidersOnBeing">If null, then this being wont be in the navmeshes</param>
-            <param name="borderOffset"></param>
-            <param name="ownCharacterLayer"></param>
-            <param name="otherCharactersLayerMask"></param>
+            <param name="position"></param>
+            <param name="yOffset">
+            The "safety margin" below the plane navigable terrain, should usually be set to
+            SharedSettings.HeightForGroundingRaycasts.
+            "true" navigable plane:                       ---------------------------------------
+            yOffset,                                       ↕ Settings.HeightForGroundingRaycasts
+            final height considered as the plane ceiling: =======================================
+            </param>
+            <param name="margin"></param>
+            <returns></returns>
         </member>
-        <member name="M:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.ReleaseNavServerAndUnregisterBeing(System.Int32,UnityEngine.GameObject[])">
+        <member name="P:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.FloorHeight">
             <summary>
-            Release and optionally unregister caller
-            </summary>
-        </member>
-        <member name="M:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.IsInPlayerArea(UnityEngine.Vector3,System.Single)">
-            Determine if position is inside player area and
-            - if margin is positive: at least 'margin' inside of it (this now works just like 'ClosestPointInsidePlayerArea()');
-            - if margin is negative: at most '-margin' away from it
-        </member>
-        <member name="M:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.DistToPlayerArea(UnityEngine.Vector3)">
-            <summary>
-            PS: why not give users of INavigableTerrain direct access to BoundsOfPlayerArea? Because they shouldn't assume
-            that the player area is an AABB. In the future, this area may have different shapes.
+            The height of the navigable terrain "floor"
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.ClosestPointInsidePlayerArea(UnityEngine.Vector3,System.Single)">
+        <member name="P:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.CenterPosition">
+            <summary>
+            The center position of this navigable terrain
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.DistToBounds(UnityEngine.Vector3)">
+            <summary>
+            Return the minimal distance from the given position to this NavigableTerrain's bounds.
+            0 if position is inside.
+            </summary>
+            <param name="position"></param>
+            <returns></returns>
+        </member>
+        <member name="M:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.ClosestPointInsideBounds(UnityEngine.Vector3,System.Single)">
             <summary>
             Get closest point inside player area for 'position', and ensure that this point is
             at least at distance 'margin' *inside* of the border.
             Result undefined if margin is larger than any vector from border to center.
             </summary>
+            <param name="position"></param>
+            <param name="margin"></param>
+            <returns></returns>
+        </member>
+        <member name="M:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.GetFreeSpotInWalkableZones(VirtualBeings.Tech.BehaviorComposition.Being,UnityEngine.Vector3@,VirtualBeings.Tech.UnityIntegration.IInteractable,System.Single)">
+             <summary>
+            
+             </summary>
+             <param name="forBeing"></param>
+             <param name="position"></param>
+             <param name="reference"></param>
+             <param name="minDistFromReference"></param>
+             <returns></returns>
+        </member>
+        <member name="M:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.GetFreeRootParentProvider(VirtualBeings.Tech.BehaviorComposition.Being,VirtualBeings.Tech.UnityIntegration.RootParentType,VirtualBeings.Tech.UnityIntegration.IInteractable,System.Single)">
+             <summary>
+            
+             </summary>
+             <param name="forBeing"></param>
+             <param name="rootParentType"></param>
+             <param name="reference"></param>
+             <param name="minDistFromReference"></param>
+             <returns></returns>
+        </member>
+        <member name="M:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.GetSpawningPositions">
+             <summary>
+            
+             </summary>
+             <returns></returns>
         </member>
         <member name="T:VirtualBeings.Tech.UnityIntegration.NamedArrayAttribute">
             <summary>
@@ -9550,6 +9663,15 @@
             <summary>
             Threshold angle in degrees that determines when we should start moving the head while looking at a target.
             </summary>
+        </member>
+        <member name="M:VirtualBeings.Beings.Floater.Activities.FloatTo.Start(VirtualBeings.Tech.BehaviorComposition.IRS,VirtualBeings.Tech.BehaviorComposition.IRS,UnityEngine.Vector3)">
+            <summary>
+            
+            </summary>
+            <param name="floatRs"></param>
+            <param name="targetRs">The target RootState that should be requested when the being has finished floating</param>
+            <param name="goal"></param>
+            <returns></returns>
         </member>
         <member name="T:VirtualBeings.Beings.Floater.Infrastructure.RSFloaterBase">
              <summary>

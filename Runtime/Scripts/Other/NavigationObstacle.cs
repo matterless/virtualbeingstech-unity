@@ -27,7 +27,7 @@ namespace VirtualBeings.Tech.Shared
 
         private void Awake()
         {
-            Init(Container.NavigableTerrainManager);    
+            Init(Container.NavigableTerrainManager);
         }
 
         private void Init(NavigableTerrainManager navigableTerrainManager)
@@ -37,8 +37,14 @@ namespace VirtualBeings.Tech.Shared
 
         private void OnEnable()
         {
-            _terrain = _navigableTerrainManager.GetClosestNavigableTerrain(transform.position);
+            _terrain = _navigableTerrainManager.FindOwningNavigableTerrain(transform.position, 0f);
             _colliders = GetComponentsInChildren<Collider>(false);
+
+            if(_terrain == null)
+            {
+                Misc.LogWarning($"{this} could not find a NavigableTerrain to register to. This obstacle need to be inside one !");
+                return;
+            }
 
             foreach (Collider c in _colliders)
             {
@@ -63,6 +69,11 @@ namespace VirtualBeings.Tech.Shared
 
         private void OnDisable()
         {
+            if(_terrain == null)
+            {
+                return;
+            }
+
             foreach (Collider c in _colliders)
                 _terrain.UnregisterGameObjectAsObstacle(c.gameObject);
         }

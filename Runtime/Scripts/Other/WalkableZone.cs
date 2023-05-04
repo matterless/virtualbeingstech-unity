@@ -80,7 +80,8 @@ namespace VirtualBeings.Tech.Shared
             float maxDistFromCenter = float.MaxValue, int nMaxAttempts = 5)
         {
             float sphereCastDistance = freeRadius * 4f;
-            LayerMask sphereCastLayerMask = being.SharedSettings.NavObstacleMask | being.OtherCharactersLayerMask;
+            // TODO(Raph) this will ignore other beings ! Need to fix it for multiple being.
+            LayerMask sphereCastLayerMask = being.SharedSettings.NavObstacleMask /* | Container.Instance.BeingManager.BeingManagerSettings.BeingsLayer */;
             maxDistFromCenter = Math.Min(maxDistFromCenter, _maxWalkableRadius);
 
             // first, search once in every direction (radially around root position)

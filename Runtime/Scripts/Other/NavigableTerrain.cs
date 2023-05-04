@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 using VirtualBeings.Tech.BehaviorComposition;
 using VirtualBeings.Tech.UnityIntegration;
 using VirtualBeings.Tech.UnityIntegration.NavigableTerrain;
@@ -15,74 +16,165 @@ namespace VirtualBeings.Tech.Shared
 {
     // Contrary to INavigableTerrain, NavigableTerrain assumes to be AABB.
     /// <summary>
-    /// Navigable terrain must execute before other MonoBehaviour to register as a navigable terrain : 
+    /// Navigable terrain must execute before other MonoBehaviour to register as a navigable terrain :
     /// since Being and Interactable need these terrain when they awake (so they are executed after the terrain)
     /// </summary>
     [DefaultExecutionOrder(-500)]
     public class NavigableTerrain : MonoBehaviour, IInteractable, INavigableTerrain
     {
-        ////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="collider">
+        /// The navigable collider to use to construct the navigable terrain.
+        /// Only MeshCollider, BoxCollider and SphereCollider supported
+        /// **Mandatory, Cannot be null**
+        /// </param>
+        /// <param name="floorHeight">
+        /// The height of the floor of the navigable terrain. If not set, the height of the parent transform
+        /// will be used as the floor height.
+        /// </param>
+        /// <param name="margin">The wiggle room area around the collider. Will be clamped to 0 if negative.</param>
+        /// <param name="refreshRate">
+        /// The main collider refresh rate. Useful in the case of a movable collider, or if the input can vary a bit
+        /// (e.g. AR Planes).
+        /// Can be -1 to disable it and save resources in case of a static collider.
+        /// </param>
+        /// <param name="localSpaceNavigation">
+        /// Whether the navigation mesh should be defined relative to it's container game object or in world space.
+        /// Should be set to true for movable platforms for example.
+        /// </param>
+        /// <param name="parent">The parent of the navigable terrain. Can be null.</param>
+        /// <param name="name">The name of the navigable terrain. Can be empty.</param>
+        /// <param name="enableMeshDebugging"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public static NavigableTerrain CreateNavigableTerrain(
+            Collider collider,
+            float? floorHeight = null,
+            float margin = 1f,
+            float refreshRate = -1f,
+            bool localSpaceNavigation = false,
+            Transform parent = null,
+            string name = "",
+            bool enableMeshDebugging = false
+        )
+        {
+            if (collider == null)
+            {
+                throw new Exception("A collider must be provided to create a navigable terrain");
+            }
+
+            GameObject navGameObject = new(name);
+
+            if (parent != null)
+            {
+                navGameObject.transform.parent = parent;
+            }
+
+            navGameObject.transform.localPosition = Vector3.zero;
+
+            if (floorHeight.HasValue)
+            {
+                Vector3 p = navGameObject.transform.position;
+                p.y = floorHeight.Value;
+
+                navGameObject.transform.position = p;
+            }
+
+            navGameObject.transform.localRotation = Quaternion.identity;
+
+            navGameObject.transform.localScale = Vector3.one;
+
+            NavigableTerrain navTerrain = navGameObject.AddComponent<NavigableTerrain>();
+
+            navTerrain.NavigationAreaMargin         = Mathf.Max(margin, 0f);
+            navTerrain.NavigationAreaRefreshRate    = refreshRate;
+            navTerrain.EnableNavigableMeshDebugging = enableMeshDebugging;
+            navTerrain.NavigationIsInLocalSpace     = localSpaceNavigation;
+
+            navTerrain.SetNavigableCollider(collider);
+
+            return navTerrain;
+        }
+
+        // ------------------------------
         // Serialized fields
 
-        [SerializeField]
-        private BoxCollider BoundingBoxForNavServer;
+        [FormerlySerializedAs("BoundingBoxForNavServer"), SerializeField]
+        private Collider NavigableCollider;
+
+        private Bounds _bounds
+        {
+            get
+            {
+                if (NavigableCollider != null)
+                    return NavigableCollider.bounds;
+                else
+                    return new Bounds();
+            }
+        }
+       
 
         [SerializeField]
-        private Bounds BoundsOfPlayerArea;
-        public Bounds BoundsOfThePlayerArea => BoundsOfPlayerArea;
+        private bool NavigationIsInLocalSpace;
+
+        [SerializeField, Min(0f)]
+        private float NavigationAreaMargin = 1f;
+
+        [SerializeField, Tooltip("The rate at which the main navigation collider should be refreshed. A negative value means static.")]
+        private float NavigationAreaRefreshRate = -1f;
 
         [SerializeField]
         private List<GameObject> SpawningPoints;
 
         [SerializeField, Header("Use to visualize navmeshes in the editor")]
-        private int IndexOfVisualizedDebugMesh = -1;
+        public bool EnableNavigableMeshDebugging;
 
         [SerializeField]
-        private Settings NavigableTerrainSettings;
+        public Settings NavigableTerrainSettings = new();
 
-        [Header("Flight Structure")]
-        [SerializeField]
-        private IFlightMap _flightMap; // TODO : better way for integration
+        // TODO(Raph): Flight map got removed from Navigable Terrain
+        // [Header("Flight Structure")]
+        // [SerializeField]
+        // private IFlightMap _flightMap; // TODO : better way for integration
 
         [SerializeField, HideInInspector]
         private int _interactableID;
 
-        /******************************************/
-
-        ////////////////////////////////////////////////////////////////////////////////////////
+        // ------------------------------
         // IInteractable
 
-        public GameObject TopLevelParent { get { return gameObject; } }
-        public bool IsDestroyed => gameObject == null;
-        public IAgent DestroyedBy { get; private set; }
-        public Vector3 CenterPosition => transform.position;
-        public Quaternion CenterRotation => transform.rotation;
-        public Vector3 SalientPosition => transform.position;
+        public GameObject TopLevelParent  => gameObject;
+        public bool       IsDestroyed     => gameObject == null;
+        public IAgent     DestroyedBy     { get; private set; }
+        public Quaternion CenterRotation  => transform.rotation;
+        public Vector3    SalientPosition => transform.position;
         public bool IsInInteractionDB() => false; // terrains aren't saved to interactionDB
         public bool HasProperty(InteractableProperty property) => false; // no properties
         public void Destroy(IAgent _ = null) => Destroy(gameObject);
-        public Set<int> Properties { get; } = new Set<int>();
-        public Vector3 RootPosition => transform.position;
-        public Quaternion RootRotation => transform.rotation;
-        public bool IsLocalizable => false;
-        public bool IsLocal => true; // TODO multiplayer
-        public float MaxRadius => BoundsOfPlayerArea.extents.magnitude;
-        public float Height => 0f;
-        public float Length => 0f;
-        public float Width => 0f;
-        public float Desirability => 0f;
-        public float Repulsiveness => 0f;
-        public bool IsDynamic => false;
-        public bool IsHandled => false;
-        public IInteractable Handler => null;
-        public bool IsInPlacementMode => false;
-        public IInteractionMode InteractionMode => null;
+        public Set<int>         Properties        { get; } = new Set<int>();
+        public Vector3          RootPosition      => transform.position;
+        public Quaternion       RootRotation      => transform.rotation;
+        public bool             IsLocalizable     => false;
+        public bool             IsLocal           => true; // TODO multiplayer
+        public float            MaxRadius         => _bounds.extents.magnitude;
+        public float            Length            => 0f;
+        public float            Width             => 0f;
+        public float            Height            => 0f;
+        public float            Desirability      => 0f;
+        public float            Repulsiveness     => 0f;
+        public bool             IsDynamic         => false;
+        public bool             IsHandled         => false;
+        public IInteractable    Handler           => null;
+        public bool             IsInPlacementMode => false;
+        public IInteractionMode InteractionMode   => null;
 
         // the following three are never used as terrains aren't saved to interactionDB
         public Vector3 Velocity { get; set; }
         public Vector3 ___PrevPosition { get; set; }
         public Vector3 CorrectiveDelta { get; set; }
-        
+
         public int InteractableID { get => _interactableID; set => _interactableID = value; }
 
         public bool SetHandler(IInteractable handler) => false;
@@ -90,61 +182,81 @@ namespace VirtualBeings.Tech.Shared
 
         public event Action OnHandlerChanged;
 
-        ////////////////////////////////////////////////////////////////////////////////////////
+        // ------------------------------
         // INavigableTerrain
 
-        public Vector3 CenterOfPlayerArea => BoundsOfPlayerArea.center;
-        public float MinRadiusOfPlayerArea => Math.Min(BoundsOfPlayerArea.extents.x, BoundsOfPlayerArea.extents.z);
-        public float MaxRadiusOfPlayerArea => Mathf.Sqrt(MMath.Sqr(BoundsOfPlayerArea.extents.x) + MMath.Sqr(BoundsOfPlayerArea.extents.z));
+        public Collider  NavigationCollider                 => NavigableCollider;
+        public Transform Transform                          => transform;
+        public bool      DefineNavigableTerrainInLocalSpace => NavigationIsInLocalSpace;
+        public float     Epsilon                            => NavigableTerrainSettings.Epsilon;
+        public float MaxTimePerFrameForNavigationProcessingInMs =>
+            NavigableTerrainSettings.TimeInMsPerFrameForNavMeshProcessing;
+        public ILineSegmentVisualizer LineSegmentVisualizer { get; private set; }
+        public float                  FloorHeight           => transform.position.y;
+        public bool                   EnableDebugView       => EnableNavigableMeshDebugging;
+        public Vector3 CenterPosition
+        {
+            get
+            {
+                if (NavigableCollider != null)
+                    return new Vector3(_bounds.center.x, FloorHeight, _bounds.center.z); // TODO(Raph) : recalculate only if navigableTerrain has moved
+                else
+                    return Vector3.zero;
+            }
+        }
+       
+
+        public float Margin => NavigationAreaMargin;
+
+        public float RefreshRate => NavigationAreaRefreshRate;
+
+        public Vector3 CenterOfPlayerArea => _bounds.center;
+        public float MinRadiusOfPlayerArea => Math.Min(_bounds.extents.x, _bounds.extents.z);
+        public float MaxRadiusOfPlayerArea => Mathf.Sqrt(MMath.Sqr(_bounds.extents.x) + MMath.Sqr(_bounds.extents.z));
 
         /// <summary>
-        /// Determine if position is inside *planar* player area and
-        /// - if margin is positive: at least 'margin' inside of it (this now works just like 'ClosestPointInsidePlayerArea()');
-        /// - if margin is negative: at most '-margin' away from it
+        /// The height of the navigable plane, with the HeightForGroundingRaycasts taken into account
+        ///
+        /// "true" navigable plane:                       ---------------------------------------
+        /// yOffset,                                       ↕ Settings.HeightForGroundingRaycasts
+        /// final height considered as the plane ceiling: =======================================
+        ///
         /// </summary>
-        public bool IsInPlayerArea(Vector3 position, float margin = 0f)
+        public bool IsInsideBounds(Vector3 position, float yOffset, float margin = 0)
         {
-            Vector3 min = BoundsOfPlayerArea.min;
-            Vector3 max = BoundsOfPlayerArea.max;
+            Vector3 min = _bounds.min;
+            Vector3 max = _bounds.max;
 
             return
                 position.x > min.x + margin &&
                 position.x < max.x - margin &&
                 position.z > min.z + margin &&
-                position.z < max.z - margin;
+                position.z < max.z - margin &&
+                position.y >= transform.position.y - yOffset;
         }
 
-        /// <summary>
-        /// PS: why not give users of INavigableTerrain direct access to BoundsOfPlayerArea? Because they shouldn't assume
-        /// that the player area is an AABB. In the future, this area may have different shapes.
-        /// </summary>
-        public float DistToPlayerArea(Vector3 position)
+        public float DistToBounds(Vector3 position)
         {
-            return BoundsOfPlayerArea.Contains(position)
+            return _bounds.Contains(position)
                 ? 0f
-                : (BoundsOfPlayerArea.ClosestPoint(position) - position).magnitude;
+                : (_bounds.ClosestPoint(position) - position).magnitude;
         }
 
-        /// <summary>
-        /// Get closest point inside player area for 'position', and ensure that this point is
-        /// at least at distance 'margin' *inside* of the border.
-        /// Result undefined if margin is larger than any vector from border to center.
-        /// </summary>
-        public Vector3 ClosestPointInsidePlayerArea(Vector3 position, float margin = 0f)
+        public Vector3 ClosestPointInsideBounds(Vector3 position, float margin = 0)
         {
             if (margin > 0f)
             {
-                Bounds reducedBoundsOfPlayerArea = new(BoundsOfPlayerArea.center, BoundsOfPlayerArea.size);
+                Bounds reducedBoundsOfPlayerArea = new(_bounds.center, _bounds.size);
                 reducedBoundsOfPlayerArea.Expand(-margin); // shrink bounds by margin
 
                 return reducedBoundsOfPlayerArea.Contains(position)
                     ? position
                     : reducedBoundsOfPlayerArea.ClosestPoint(position);
             }
-            else
-                return BoundsOfPlayerArea.Contains(position)
-                    ? position
-                    : BoundsOfPlayerArea.ClosestPoint(position);
+
+            return _bounds.Contains(position)
+                ? position
+                : _bounds.ClosestPoint(position);
         }
 
         private void OnDestroy()
@@ -161,109 +273,31 @@ namespace VirtualBeings.Tech.Shared
 
         public void RegisterGameObjectAsObstacle(GameObject go, float updateFrequencyInSeconds = 0f, float borderOffset = 0f)
         {
-            for (int i = 0; i < _perBeingResources.Length; i++)
-                _perBeingResources[i].NavServer.RegisterGameObjectAsObstacle(go, updateFrequencyInSeconds, borderOffset);
+            Container.NavigableTerrainManager.RegisterGameObjectAsObstacle(
+                this,
+                go,
+                updateFrequencyInSeconds,
+                borderOffset
+            );
         }
 
         public void UnregisterGameObjectAsObstacle(GameObject go)
         {
-            for (int i = 0; i < _perBeingResources.Length; i++)
-                _perBeingResources[i].NavServer.UnregisterGameObjectAsObstacle(go);
+            Container.NavigableTerrainManager.UnregisterGameObjectAsObstacle(this, go);
         }
 
         [Obsolete("This method is only used for the (early) CaaS demo and will be removed soon")]
         public void GetDebugPath(Vector3 start, Vector3 goal, float clearance, List<Vector3> resultBuffer)
         {
-            _perBeingResources[0].NavServer.GetDebugPath(start, goal, clearance, resultBuffer);
+            Container.NavigableTerrainManager.GetDebugPath(this, start, goal, clearance, resultBuffer);
         }
 
-        public NavigationServerSynchronous GetNewNavServerAndRegisterBeing(int beingID, GameObject[] gosWithCollidersOnBeing, float borderOffset,
-            out int ownCharacterLayer, out LayerMask otherCharactersLayerMask)
-        {
-            // TODO(Raph) make it so we use one navserver for multiple being
-            //if(_dictBeingIDsToNavServers.Count >= _perBeingResources.Length)
-            //{
-            //    throw new Exception("Erroneous call to GetNewNavServerAndRegisterBeing; not enough space ( " +
-            //        _dictBeingIDsToNavServers.Count + " >= " + _perBeingResources.Length + " ?");
-            //}
-            if ( _dictBeingIDsToNavServers.ContainsKey(beingID))
-            {
-                throw new Exception("Erroneous call to GetNewNavServerAndRegisterBeing; nav server already contains being: " +
-                    _dictBeingIDsToNavServers.ContainsKey(beingID));
-            }
-                
-            // start by finding the first unused navserver
-            NavigationServerSynchronous navServer = null;
-            ownCharacterLayer = 0;
-            otherCharactersLayerMask = 0;
-
-            // Use first resource
-            if(_perBeingResources == null || _perBeingResources.Length == 0)
-            {
-                throw new Exception("NavigableTerrain not initialised.");
-            }
-            navServer = _perBeingResources[0].NavServer;
-            ownCharacterLayer = _perBeingResources[0].Layer;
-            otherCharactersLayerMask = NavigableTerrainSettings.AssignableCharacterLayers & ~(1 << ownCharacterLayer);
-
-            //for (int i = 0; i < _perBeingResources.Length; i++)
-            //{
-            //    if (!_dictBeingIDsToNavServers.ContainsValue(_perBeingResources[i].NavServer))
-            //    {
-            //        navServer = _perBeingResources[i].NavServer;
-            //        ownCharacterLayer = _perBeingResources[i].Layer;
-            //        otherCharactersLayerMask = NavigableTerrainSettings.AssignableCharacterLayers & ~(1 << ownCharacterLayer);
-            //        break;
-            //    }
-            //}
-
-            // mark it as 'used'
-            _dictBeingIDsToNavServers[beingID] = navServer;
-
-            // then optionally insert being into the other navservers, whether or not they are used
-            if (gosWithCollidersOnBeing != null)
-                for (int i = 0; i < _perBeingResources.Length; i++)
-                    if (navServer != _perBeingResources[i].NavServer)
-                        for (int j = 0; j < gosWithCollidersOnBeing.Length; j++)
-                            _perBeingResources[i].NavServer.RegisterGameObjectAsObstacle(gosWithCollidersOnBeing[j], NavigableTerrainSettings.UpdateFrequencyForBeingsInSeconds, borderOffset);
-
-            // done
-            return navServer;
-        }
-
-        public void ReleaseNavServerAndUnregisterBeing(int beingID, GameObject[] gosWithCollidersOnBeing = null)
-        {
-            // find the navserver registered to this being
-            if (_dictBeingIDsToNavServers.TryGetValue(beingID, out NavigationServerSynchronous navServer))
-            {
-                // optionally unregister being from all other navservers
-                if (gosWithCollidersOnBeing != null)
-                    for (int i = 0; i < _perBeingResources.Length; i++)
-                        if (navServer != _perBeingResources[i].NavServer)
-                            for (int j = 0; j < gosWithCollidersOnBeing.Length; j++)
-                                _perBeingResources[i].NavServer.UnregisterGameObjectAsObstacle(gosWithCollidersOnBeing[j]);
-
-                // mark the navserver as unused
-                _dictBeingIDsToNavServers.Remove(beingID);
-            }
-            else
-                throw new Exception("Erroneous call to ReleaseNavServerAndUnregisterBeing: beingID not found");
-        }
-
-        /// <summary>
-        /// NB: removes all previous navservers
-        /// </summary>
-        public void Debug_ResetNNavServers(int n)
-        {
-            CreateAndInitNavServers(n);
-        }
-
-        public IFlightMap GetFlightMap()
-        {
-            return _flightMap;
-        }
-
-        public bool GetFreeSpotInWalkableZones(Being forBeing, out Vector3 position, IInteractable reference = null, float minDistFromReference = 0f)
+        public bool GetFreeSpotInWalkableZones(
+            Being forBeing,
+            out Vector3 position,
+            IInteractable reference = null,
+            float minDistFromReference = 0f
+        )
         {
             if (reference == null || minDistFromReference == 0f)
             {
@@ -271,15 +305,20 @@ namespace VirtualBeings.Tech.Shared
             }
             else
             {
-                _interactionDB.FindAll(typeof(IWalkableZone),
-                    (i) => (i.SalientPosition - reference.SalientPosition).sqrMagnitude > MMath.Sqr(minDistFromReference),
-                    _resultBufferForInteractableSearches);
+                _interactionDB.FindAll(
+                    typeof(IWalkableZone),
+                    (i) => (i.SalientPosition - reference.SalientPosition).sqrMagnitude >
+                        MMath.Sqr(minDistFromReference),
+                    _resultBufferForInteractableSearches
+                );
             }
 
             if (_resultBufferForInteractableSearches.Count > 0)
             {
                 // get a randome item from the list of walkable zones
-                var walkableZone = _resultBufferForInteractableSearches[Rand.Range(0, _resultBufferForInteractableSearches.Count)] as IWalkableZone;
+                var walkableZone =
+                    _resultBufferForInteractableSearches[Rand.Range(0, _resultBufferForInteractableSearches.Count)] as
+                        IWalkableZone;
 
                 // use it to get a free position
                 if (walkableZone.GetRandomFreePosition(forBeing, forBeing.MaxRadius, out position))
@@ -291,7 +330,7 @@ namespace VirtualBeings.Tech.Shared
         }
 
         public IRootParentProvider GetFreeRootParentProvider(Being forBeing, RootParentType rootParentType = RootParentType.Any,
-            IInteractable reference = null, float minDistFromReference = float.MaxValue)
+                                                             IInteractable reference = null, float minDistFromReference = float.MaxValue)
         {
             bool predicate(IInteractable i)
             {
@@ -311,38 +350,57 @@ namespace VirtualBeings.Tech.Shared
             return null;
         }
 
-        ////////////////////////////////////////////////////////////////////////////////////////
+        public void SetNavigableCollider(Collider collider)
+        {
+            if (NavigableCollider != null)
+            {
+                throw new Exception("This function should only be called once, and if no collider has been set before");
+            }
+
+            NavigableCollider = collider;
+
+            _worldEvents.Raise(new Event_World_RegisterNavigableTerrain(this));
+        }
+
+        // ------------------------------
         // internal stuff
 
         private void Update()
         {
-            if (NavigableTerrainSettings.LineSegmentVisualizer != null || Application.isEditor)
-                for (int i = 0; i < _perBeingResources.Length; i++)
-                    _perBeingResources[i].NavServer.ShowDebugMesh = i == IndexOfVisualizedDebugMesh;
+            if (NavigableCollider == null)
+            {
+                _worldEvents.Raise(new Event_World_UnregisterNavigableTerrain(this));
+                Destroy(gameObject);
+                return;
+            }
 
-            for (int i = 0; i < _perBeingResources.Length; i++)
-                _perBeingResources[i].NavServer.UpdateOncePerFrame();
+            Container.NavigableTerrainManager.UpdateNavigation(this);
         }
 
         Container Container => Container.Instance;
 
         protected virtual void Awake()
         {
-            Init(Container.WorldEvents, Container.InteractionDB, Container.NavigableTerrainManager);
+            Init(Container.WorldEvents, Container.InteractionDB);
         }
 
         private void OnEnable()
         {
-            _worldEvents.Raise(new Event_World_RegisterNavigableTerrain(this));
+            if (NavigableCollider != null)
+            {
+                _worldEvents.Raise(new Event_World_RegisterNavigableTerrain(this));
+            }
         }
 
-        private void Init(EventManager worldEvents, InteractionDB interactionDB, NavigableTerrainManager navigableTerrainManager)
+        private void Init(EventManager worldEvents, InteractionDB interactionDB)
         {
             _worldEvents = worldEvents;
-            _navigableTerrainManager = navigableTerrainManager;
             _interactionDB = interactionDB;
 
-            CreateAndInitNavServers(1);
+            LineSegmentVisualizer = NavigableTerrainSettings.LineSegmentVisualizer == null
+                ? null
+                : Instantiate(NavigableTerrainSettings.LineSegmentVisualizer, transform)
+                   .GetComponent<LineSegmentVisualizer>();
 
             // Register navServer with the gameManager to make it globally available; unregistering happens in OnDestroy().
             //
@@ -351,88 +409,17 @@ namespace VirtualBeings.Tech.Shared
             //_gameManager.WorldEvents.Raise(new Event_World_RegisterNavigableTerrain(this));
         }
 
-        private void CreateAndInitNavServers(int nNavServers)
-        {
-            List<int> assignableLayers = new(32);
-
-            for (int i = 0; i < 32; i++)
-            {
-                if ((NavigableTerrainSettings.AssignableCharacterLayers & (1 << i)) != 0)
-                    assignableLayers.Add(i);
-            }
-
-            if (assignableLayers.Count < nNavServers)
-                throw new Exception("Not enough character layers defined: " + assignableLayers.Count + " (vs " + nNavServers + " needed). " +
-                    "You need to assign a layer to your being, then specify it in the NavigableTerrain.AssignableCharacterLayers");
-
-            //_perBeingResources = new PerBeingResources[nNavServers];
-            _perBeingResources = new PerBeingResources[1]; // TODO(RAPH)
-
-            LineSegmentVisualizer visualizer = NavigableTerrainSettings.LineSegmentVisualizer == null
-                ? null
-                : Instantiate(NavigableTerrainSettings.LineSegmentVisualizer, transform).GetComponent<LineSegmentVisualizer>();
-
-            for (int i = 0; i < nNavServers; i++)
-            {
-                _perBeingResources[i] = new PerBeingResources
-                {
-                    NavServer = new NavigationServerSynchronous(transform, BoundingBoxForNavServer, NavigableTerrainSettings.Epsilon,
-                        NavigableTerrainSettings.TimeInMsPerFrameForNavMeshProcessing, false,
-                        NavigableTerrainSettings.YValueForDebugMesh, visualizer),
-                    Layer = assignableLayers[i],
-                };
-            }
-
-            foreach (Collider c in FindObjectsOfType<Collider>(false))
-            {
-                IObstacle obstacle = c.gameObject.GetComponent<IObstacle>();
-
-                if (c.gameObject.activeInHierarchy && obstacle != null && obstacle.ObstacleType == NavigableTerrainManager.ObstacleType.Static)
-                {
-                    for (int i = 0; i < nNavServers; i++)
-                    {
-                        _perBeingResources[i].NavServer.RegisterGameObjectAsObstacle(c.gameObject);
-                    }
-                }
-            }
-
-            foreach (MeshFilter meshFilter in FindObjectsOfType<MeshFilter>(true))
-            {
-                IObstacle obstacle = meshFilter.gameObject.GetComponent<IObstacle>();
-
-                if (meshFilter.gameObject.activeInHierarchy && obstacle != null && obstacle.ObstacleType == NavigableTerrainManager.ObstacleType.Static)
-                {
-                    for (int i = 0; i < nNavServers; i++)
-                    {
-                        _perBeingResources[i].NavServer.RegisterGameObjectAsObstacle(meshFilter.gameObject);
-                    }
-                }
-            }
-        }
-
         private EventManager _worldEvents;
-        private NavigableTerrainManager _navigableTerrainManager;
         private InteractionDB _interactionDB;
-        private PerBeingResources[] _perBeingResources;
-        private readonly Dictionary<int, NavigationServerSynchronous> _dictBeingIDsToNavServers = new();
         private readonly List<IInteractable> _resultBufferForInteractableSearches = new();
-
-        private struct PerBeingResources
-        {
-            public NavigationServerSynchronous NavServer;
-            public int Layer;
-        }
 
         [Serializable]
         public class Settings
         {
             [Header("Navigation server")]
-            public double Epsilon = .002;
+            public float Epsilon = 0.002f;
             public float TimeInMsPerFrameForNavMeshProcessing = 1f;
-            public float YValueForDebugMesh = .01f;
-            public float UpdateFrequencyForBeingsInSeconds = .33f;
-            public LayerMask AssignableCharacterLayers = 1 << 0; // default layer (0)
-            public GameObject LineSegmentVisualizer = null; // unused if null
+            public GameObject LineSegmentVisualizer; // unused if null
         }
     }
 }
