@@ -1945,7 +1945,7 @@
             Configuration of subactivity Vocalize
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Animals.LookWatchfullyAndVocalize.#ctor(VirtualBeings.Tech.BehaviorComposition.IActivity,VirtualBeings.Tech.BehaviorComposition.IEmoter,VirtualBeings.Tech.UnityIntegration.IInteractable,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,VirtualBeings.Tech.BehaviorComposition.IAdditiveExpression,System.Nullable{VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper})">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Animals.LookWatchfullyAndVocalize.#ctor(VirtualBeings.Tech.BehaviorComposition.IActivity,VirtualBeings.Tech.BehaviorComposition.IEmoter,VirtualBeings.Tech.UnityIntegration.IInteractable,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Nullable{VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper})">
             <summary>
             Toggle between looking at a target and just looking around
             </summary>
@@ -2276,31 +2276,14 @@
             Release intentional offsets from head and/or eyes
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.LookBase.DoAdditiveExpression(VirtualBeings.Tech.BehaviorComposition.IAdditiveExpression,System.Single,System.Single,System.Single,System.Single,System.Single)">
-            <summary>
-            Request a neck-head-face expression (yawn, meow etc)
-            NB: intensity is remapped (because of data-driven min/max intensity) as is speed01 (which gets remapped to a multiplier).
-            However, volume01 and leftRight are not remapped.
-            </summary>
-        </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.LookBase.DoFST(VirtualBeings.Tech.BehaviorComposition.IFST,System.Single,System.Single,System.Single,System.Single)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.LookBase.DoFST(VirtualBeings.Tech.BehaviorComposition.IFST,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)">
             <summary>
             Request a facial self-transition (FST)
-            </summary>
-        </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.LookBase.TerminateAdditiveExpression(System.Single)">
-            <summary>
-            Does what it says
             </summary>
         </member>
         <member name="P:VirtualBeings.Tech.BehaviorComposition.LookBase.IsInAnimatedExpression">
             <summary>
             Are we either in an additive expression (yawn, meow etc) or a transition expression (OT or ST)?
-            </summary>
-        </member>
-        <member name="P:VirtualBeings.Tech.BehaviorComposition.LookBase.IsInAdditiveExpression">
-            <summary>
-            Is a neck-head-face additive expression (yawn, meow etc) ongoing?
             </summary>
         </member>
         <member name="P:VirtualBeings.Tech.BehaviorComposition.LookBase.IsInFOTorFST">
@@ -3235,23 +3218,6 @@
             Are we either in an additive expression (yawn, meow etc) or a transition expression (OT or ST)?
             </summary>
         </member>
-        <member name="P:VirtualBeings.Tech.BehaviorComposition.FaceDomainActuator.IsInAdditiveExpression">
-            <summary>
-            Is a neck-head-face additive expression (yawn, meow etc) ongoing?
-            </summary>
-        </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.FaceDomainActuator.TerminateOngoingAdditiveExpression(System.Single)">
-            <summary>
-            Does what it says
-            </summary>
-        </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.FaceDomainActuator.DoAdditiveExpression(VirtualBeings.Tech.BehaviorComposition.IAdditiveExpression,System.Single,System.Single,System.Single,System.Single,System.Single)">
-            <summary>
-            Execute an additive neck-head-face expression (yawn, meow etc).
-            NB: preferredDuration is a hint, currently used to select different types of meows (animations + vocalizations)
-            NB: speed01 is mapped onto a speed multiplier with range [.5 .. 2]
-            </summary>
-        </member>
         <member name="M:VirtualBeings.Tech.BehaviorComposition.NotLeggedGroundingDomainActuator.DoGrounding">
              <summary>
              Ground the root and inform the FFBIK job about
@@ -3360,9 +3326,22 @@
         <member name="P:VirtualBeings.Tech.BehaviorComposition.Being.SecondaryVocalizationStatus">
             implementation of vocalization logic
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Being.GetExpressionDataWithOptionalVocalization(System.Int32,System.Int32,System.Single,System.Single,System.Single,System.Int32@,System.Single@,System.Single@)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Being.ScheduleFSTVocalization(VirtualBeings.Tech.BehaviorComposition.IFS,VirtualBeings.Tech.BehaviorComposition.IFST,System.Single,System.Single,System.Single,System.Single@)">
             <summary>
+            Get data from the (unique if available, otherwise shared if available) being-settings
+            and vocalize during an FST or FOT.
             </summary>
+            <returns>True if a vocalization was scheduled</returns>
+        </member>
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Being.RequestSecondaryVocalization(System.Single)">
+             <summary>
+             TODO this is currently geared at purring. It chooses randomly which secondary audio file
+             to play, and loops automatically. Consider broadening or refactoring.
+            
+             PS: purring is a secondary vocalization because it can occur together with primary vocalizations.
+             For virtual beings, this means that secondary vocalizations require a second audiosource.
+             </summary>
+             <param name="maxDuration"></param>
         </member>
         <member name="M:VirtualBeings.Tech.BehaviorComposition.Being.AcceptTouchThisFrame">
             <summary>
@@ -3407,7 +3386,7 @@
             which animation state there will be for the specific type of being.
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Being.InitializeBeing(VirtualBeings.Tech.ActiveCognition.BeingData,VirtualBeings.Tech.ActiveCognition.BeingSettings,VirtualBeings.Tech.ActiveCognition.BeingSharedSettings,VirtualBeings.Tech.UnityIntegration.NavigableTerrainManager.Settings,VirtualBeings.Tech.Architecture.CharacterType)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Being.InitializeBeing(VirtualBeings.Tech.ActiveCognition.BeingData,VirtualBeings.Tech.ActiveCognition.BeingSettings,VirtualBeings.Tech.ActiveCognition.BeingSharedSettings,VirtualBeings.Tech.UnityIntegration.NavigableTerrainManager.Settings,VirtualBeings.Tech.BehaviorComposition.IEmitter,VirtualBeings.Tech.Architecture.CharacterType)">
             <summary>
             Initialize the being with the given Data and Settings (either on creation or when deserializing when loading a save)
             </summary>
@@ -3415,6 +3394,7 @@
             <param name="beingSettings"></param>
             <param name="beingSharedSettings"></param>
             <param name="terrainSettings"></param>
+            <param name="emitter"></param>
             <param name="characterType"></param>
         </member>
         <member name="M:VirtualBeings.Tech.BehaviorComposition.Being.InitializeBeingSpecific">
@@ -3495,11 +3475,6 @@
             Use this property as a *seed* to construct any <see cref="T:VirtualBeings.Tech.BehaviorComposition.IFTT"/> from server code
             </summary>
         </member>
-        <member name="P:VirtualBeings.Tech.BehaviorComposition.Being.AdditiveExpressionNone">
-            <summary>
-            Use this property as a *seed* to construct any <see cref="T:VirtualBeings.Tech.BehaviorComposition.IAdditiveExpression"/> from server code
-            </summary>
-        </member>
         <member name="P:VirtualBeings.Tech.BehaviorComposition.Being.AdditiveEarExpressionNone">
             <summary>
             Use this property as a *seed* to construct any <see cref="T:VirtualBeings.Tech.BehaviorComposition.IAdditiveEarExpression"/> from server code
@@ -3538,6 +3513,11 @@
         <member name="M:VirtualBeings.Tech.BehaviorComposition.Being.GetSocialDominance01">
             <summary>
             Performance schematic dominance arbitration (based on Age, Dominance01 and Neuroticism01)
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Being.AnimationEventDispatcher(System.String)">
+            <summary>
+            Method registered in FBX importer, called by Animator
             </summary>
         </member>
         <member name="P:VirtualBeings.Tech.BehaviorComposition.IBodyActuator.DoArmIK">
@@ -3637,24 +3617,6 @@
         <member name="P:VirtualBeings.Tech.BehaviorComposition.IFaceActuator.IsInAnimatedExpression">
             <summary>
             Are we either in an additive expression (yawn, meow etc) or a transition expression (OT or ST)?
-            </summary>
-        </member>
-        <member name="P:VirtualBeings.Tech.BehaviorComposition.IFaceActuator.IsInAdditiveExpression">
-            <summary>
-            Is a neck-head-face additive expression (yawn, meow etc) ongoing?
-            </summary>
-        </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.IFaceActuator.TerminateOngoingAdditiveExpression(System.Single)">
-            <summary>
-            Does what it says
-            </summary>
-        </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.IFaceActuator.DoAdditiveExpression(VirtualBeings.Tech.BehaviorComposition.IAdditiveExpression,System.Single,System.Single,System.Single,System.Single,System.Single)">
-            <summary>
-            Execute an additive neck-head-face expression (yawn, meow etc).
-            NB: preferredDuration is a hint, currently used to select different types of meows
-            (animations + vocalizations)
-            NB: speed01 is mapped onto a speed multiplier with range [.5 .. 2]
             </summary>
         </member>
         <member name="T:VirtualBeings.Tech.BehaviorComposition.IGroundingActuator">
@@ -4102,11 +4064,6 @@
             IAdditiveEarState: interface for additive ear states
             </summary>
         </member>
-        <member name="T:VirtualBeings.Tech.BehaviorComposition.IAdditiveExpression">
-            <summary>
-            IAdditiveExpression: interface for additive neck-head-face expressions (which are orthogonal to the FSS)
-            </summary>
-        </member>
         <member name="T:VirtualBeings.Tech.BehaviorComposition.IAdditiveTailExpression">
             <summary>
             IAdditiveTailExpression: interface for additive tail expressions
@@ -4157,7 +4114,7 @@
             ITransitionType: interface for transitions between RS
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.IVocalAnimationList.GetRandomVocalAnimation(System.Single)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.IVocalizationList.GetRandomVocalization(System.Single)">
             <summary>
             Returns a random VocalAnimation whose DefaultDuration is 'probably' not
             too far from preferredDuration, though this is not guaranteed.
@@ -4730,11 +4687,6 @@
             Are we either in an additive expression (yawn, meow etc) or a transition expression (FOT or FST)?
             </summary>
         </member>
-        <member name="P:VirtualBeings.Tech.BehaviorComposition.LookAtBehavior.IsInAdditiveExpression">
-            <summary>
-            Is a neck-head-face additive expression (yawn, meow etc) ongoing?
-            </summary>
-        </member>
         <member name="P:VirtualBeings.Tech.BehaviorComposition.LookAtBehavior.IsInFOTorFST">
             <summary>
             Is a neck-head-face transition expression (FOT or FST) scheduled or ongoing?
@@ -4748,16 +4700,6 @@
         <member name="P:VirtualBeings.Tech.BehaviorComposition.LookAtBehavior.IsInFST">
             <summary>
             Is a neck-head-face FST scheduled or ongoing?
-            </summary>
-        </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.LookAtBehavior.DoAdditiveExpression(VirtualBeings.Tech.BehaviorComposition.IAdditiveExpression,System.Single,System.Single,System.Single,System.Single,System.Single)">
-            <summary>
-            Request a neck-head-face expression (yawn, meow etc)
-            </summary>
-        </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.LookAtBehavior.TerminateAdditiveExpression(System.Single)">
-            <summary>
-            Does what it says, but immediately (doesn't wait for Tick)
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.BehaviorComposition.LookAtBehavior.DoMouthOpen(System.Single,System.Single)">
@@ -4797,7 +4739,7 @@
             Release head and/or eye look-at offsets
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.LookAtBehavior.#ctor(VirtualBeings.Tech.BehaviorComposition.ServiceActivity,System.Func{UnityEngine.Vector3},System.Single,System.Nullable{VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper},System.Func{UnityEngine.Vector3},System.Single,System.Single,System.Single)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.LookAtBehavior.#ctor(VirtualBeings.Tech.BehaviorComposition.ServiceActivity,System.Func{UnityEngine.Vector3},System.Single,System.Func{UnityEngine.Vector3},System.Single,System.Single,System.Single)">
             <summary>
             LookAt makes character look at target with a specified expression. It also creates small, realistic variations of the expression
             every few seconds. It does not automatically handle head-offset-rotations.
@@ -5086,32 +5028,33 @@
         </member>
         <member name="P:VirtualBeings.Tech.BehaviorComposition.ITerminatable.TerminationRequested">
             <summary>
+            Politely asks the worker to self-terminate asap. Parents can use this and then wait for the termination.
             NB: If implemented in a class derived from Process, then this is automatically reset at Start
             </summary>
         </member>
         <member name="T:VirtualBeings.Tech.BehaviorComposition.Activity">
-            <summary>
-            Base class for all Activities. Use this to create new kinds of Activities, which will
-            require implementing MainProcess(), Enter() and Exit(). In MainProcess() you can start
-            Behaviors, which will automatically wire themselves up to get called each frame.
-            You can also instantiate nested Activities which will be executed in parallel with
-            your Activity. Correct call order is taken care of.
+             <summary>
+             Base class for all Activities. Use this to create new kinds of Activities, which will
+             require implementing MainProcess(), Enter() and Exit(). In MainProcess() you can start
+             Behaviors, which will automatically wire themselves up to get called each frame.
+             You can also instantiate nested Activities which will be executed in parallel with
+             your Activity. Correct call order is taken care of.
             
-            At any time there can only be a single 'root' Activity per Being. So if you need to run Activities
-            in parallel, you must do so inside an Activity. The root Activity has to be ticked
-            externally (via IEnumerator returned from public Start()). It must be ticked before
-            Actuator.Update().
+             At any time there can only be a single 'root' Activity per Being. So if you need to run Activities
+             in parallel, you must do so inside an Activity. The root Activity has to be ticked
+             externally (via IEnumerator returned from public Start()). It must be ticked before
+             Actuator.Update().
             
-            NB: *don't* create new Activities or Behaviors inside the constructor of an Activity, but only
-            in MainActivity() [reason: Activities and Behaviors are recyclable, but their child Activities and Behaviors
-            get detached from the calling framework when Finish is called. New Activities and Behaviors must therefore
-            be called inside the Start() - Finish() cycle]
+             NB: *don't* create new Activities or Behaviors inside the constructor of an Activity, but only
+             in MainActivity() [reason: Activities and Behaviors are recyclable, but their child Activities and Behaviors
+             get detached from the calling framework when Finish is called. New Activities and Behaviors must therefore
+             be called inside the Start() - Finish() cycle]
             
-            Guarantees:
-            - Start() is deterministic in both forms, i.e. it cant fail.
-            - Interrupt() ensures that the MainProcess won't be called anymore, and that
-              the Activity will process Exit() and that of its children and terminate its Behaviors as soon as it is ticked.
-            </summary>
+             Guarantees:
+             - Start() is deterministic in both forms, i.e. it cant fail.
+             - Interrupt() ensures that the MainProcess won't be called anymore, and that
+               the Activity will process Exit() and that of its children and terminate its Behaviors as soon as it is ticked.
+             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.BehaviorComposition.Activity.GetExpression">
             <summary>
@@ -5177,11 +5120,6 @@
         <member name="M:VirtualBeings.Tech.BehaviorComposition.Behavior.GetExpression">
             <summary>
             Return the expression currently associated with this behavior
-            </summary>
-        </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Behavior.SetExpression(VirtualBeings.Tech.BehaviorComposition.IFS,VirtualBeings.Tech.BehaviorComposition.IFTT,System.Single,System.Single)">
-            <summary>
-            Set the expression currently associated with this behavior
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.BehaviorComposition.Behavior.Enter">
@@ -5400,23 +5338,6 @@
             <param name="beingPosition"></param>
             <returns></returns>
         </member>
-        <member name="T:VirtualBeings.Tech.Beings.Bird.AdditiveBirdExpressionBase">
-             <summary>
-             Marker ABC known by KuteEngine to ensure type-safe use of AdditiveBirdExpression as an ExtensibleEnum by clients of the KuteEngine server.
-            
-             PS: superclass ExtensibleEnum(T) keeps track of the 'enum' classes that instantiate this class. This means that it's not possible
-             to further generalize it into a superclass that works for cats, birds and so on.
-             </summary>
-        </member>
-        <member name="M:VirtualBeings.Tech.Beings.Bird.AdditiveBirdExpressionBase.VirtualBeings#Tech#BehaviorComposition#IAdditiveExpression#FromID_viaInstance(System.Int32)">
-            Public non-static interface
-        </member>
-        <member name="P:VirtualBeings.Tech.Beings.Bird.AdditiveBirdExpressionBase.None">
-            Public interface
-        </member>
-        <member name="M:VirtualBeings.Tech.Beings.Bird.AdditiveBirdExpressionBase.#ctor(System.String)">
-            Internals
-        </member>
         <member name="T:VirtualBeings.Tech.Beings.Bird.AdditiveTailExpressionBirdBase">
             <summary>
             Marker ABC known by KuteEngine to ensure type-safe use of AdditiveTailExpressionBird as an ExtensibleEnum by clients of the KuteEngine server
@@ -5620,15 +5541,6 @@
              This means that it's not possible to further generalize it into a superclass that works for cats, birds and so on.
              </summary>
         </member>
-        <member name="T:VirtualBeings.Tech.Beings.Floater.AdditiveFloaterExpressionBase">
-             <summary>
-             Marker ABC known by KuteEngine to ensure type-safe use of AdditiveFloaterExpression as an ExtensibleEnum
-             by clients of the Rascal server
-            
-             PS: superclass ExtensibleEnum(T) keeps track of the 'enum' classes that instantiate this class.
-             This means that it's not possible to further generalize it into a superclass that works for cats, birds and so on.
-             </summary>
-        </member>
         <member name="T:VirtualBeings.Tech.Beings.Floater.BodyPoseFloaterBase">
              <summary>
              Marker ABC known by KuteEngine to ensure type-safe use of BodyPoseFloater as an ExtensibleEnum
@@ -5704,15 +5616,6 @@
         <member name="T:VirtualBeings.Tech.Beings.Floater.FTTFloaterBase">
              <summary>
              Marker ABC known by KuteEngine to ensure type-safe use of FTTFloater as an ExtensibleEnum
-             by clients of the Rascal server
-            
-             PS: superclass ExtensibleEnum(T) keeps track of the 'enum' classes that instantiate this class.
-             This means that it's not possible to further generalize it into a superclass that works for cats, birds and so on.
-             </summary>
-        </member>
-        <member name="T:VirtualBeings.Tech.Beings.Humanoid.AdditiveHumanoidExpressionBase">
-             <summary>
-             Marker ABC known by KuteEngine to ensure type-safe use of AdditiveFloaterExpression as an ExtensibleEnum
              by clients of the Rascal server
             
              PS: superclass ExtensibleEnum(T) keeps track of the 'enum' classes that instantiate this class.
@@ -6103,23 +6006,6 @@
         <member name="M:VirtualBeings.Tech.Beings.SmallQuadrupeds.STSmallQuadrupedBase.#ctor(System.Boolean,System.String)">
             Internals
         </member>
-        <member name="T:VirtualBeings.Tech.Beings.SmallQuadrupeds.AdditiveSmallQuadrupedExpressionBase">
-            <summary>
-            Marker ABC known by KuteEngine to ensure type-safe use of AdditiveCatExpression as an ExtensibleEnum by clients of the KuteEngine server.
-            
-            PS: superclass ExtensibleEnum(T) keeps track of the 'enum' classes that instantiate this class. This means that it's not possible
-            to further generalize it into a superclass that works for cats, birds and so on.
-            </summary>
-        </member>
-        <member name="M:VirtualBeings.Tech.Beings.SmallQuadrupeds.AdditiveSmallQuadrupedExpressionBase.VirtualBeings#Tech#BehaviorComposition#IAdditiveExpression#FromID_viaInstance(System.Int32)">
-            Public non-static interface
-        </member>
-        <member name="P:VirtualBeings.Tech.Beings.SmallQuadrupeds.AdditiveSmallQuadrupedExpressionBase.None">
-            Public interface
-        </member>
-        <member name="M:VirtualBeings.Tech.Beings.SmallQuadrupeds.AdditiveSmallQuadrupedExpressionBase.#ctor(System.String)">
-            Internals
-        </member>
         <member name="P:VirtualBeings.Tech.Beings.SmallQuadrupeds.SmallQuadrupedBeing.SmallQuadrupedMind">
             internal properties
         </member>
@@ -6462,11 +6348,11 @@
             <summary>
             Class used to store information for the initialization and start of a Being Instance.
             Being can be initialized in 3 different modes (Host, Client, Local = default).<br/>
-            Host has authority over the Being, and handle the being's Mind and behaviors. Host being need a <paramref name="networkInterface"/>.<br/>
-            Client doesn't have authority over the Being, and replicate what the host do on the Actuator level. Client being need a <paramref name="networkInterface"/>.<br/>
-            Local has authority over the Being but does not need to replicate it over a network. Local doesn't need a<paramref name="networkInterface"/>.<br/>
+            Host has authority over the Being, and handle the being's Mind and behaviors. Host being needs a <see cref="F:VirtualBeings.Tech.UnityIntegration.BeingManager.BeingInfo.NetworkInterface"/>.<br/>
+            Client doesn't have authority over the Being, and replicate what the host do on the Actuator level. Client being needs a <see cref="F:VirtualBeings.Tech.UnityIntegration.BeingManager.BeingInfo.NetworkInterface"/>.<br/>
+            Local has authority over the Being but does not need to replicate it over a network. Local doesn't need a <see cref="F:VirtualBeings.Tech.UnityIntegration.BeingManager.BeingInfo.NetworkInterface"/>.<br/>
             <br/>
-            Optionnaly, override the default execution type given in <paramref name="beingSettings"/>.
+            Optionally, override the default execution type given in <see cref="F:VirtualBeings.Tech.UnityIntegration.BeingManager.BeingInfo.BeingSettings"/>.
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.UnityIntegration.BeingManager.OnApplicationQuit(VirtualBeings.Tech.UnityIntegration.Event_Unity_OnApplicationQuit)">
@@ -6586,11 +6472,6 @@
         <member name="T:VirtualBeings.Tech.UnityIntegration.IVariableDriverInfo">
             <summary>
             Animation-driven float variable
-            </summary>
-        </member>
-        <member name="M:VirtualBeings.Tech.UnityIntegration.PostProcessAnimation.AnimationEventDispatcher(System.String)">
-            <summary>
-            Method registered in FBX importer, called by Animator
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.UnityIntegration.PostProcessAnimation.GetVariableDriverInfo(System.String)">
@@ -9622,22 +9503,6 @@
         <member name="P:VirtualBeings.BehaviorComposition.Activities.LookIntermittentDuringMoveTo.LookDuringMoveToSpeediness">
             <summary>
             The speediness when looking while moving. See LookBase.LookSpeediness.
-            </summary>
-        </member>
-        <member name="M:VirtualBeings.BehaviorComposition.Activities.LookIntermittentDuringMoveTo.DoAdditiveExpression(VirtualBeings.Tech.BehaviorComposition.IAdditiveExpression,System.Single,System.Single,System.Single,System.Single,System.Single)">
-            <summary>
-            Request an additive expression on the currently active look, if any.
-            </summary>
-            <param name="additiveNeckHeadFaceExpression"></param>
-            <param name="intensity"></param>
-            <param name="speed01"></param>
-            <param name="preferredDuration"></param>
-            <param name="volume01"></param>
-            <param name="leftRight"></param>
-        </member>
-        <member name="P:VirtualBeings.BehaviorComposition.Activities.LookIntermittentDuringMoveTo.IsInAdditiveExpression">
-            <summary>
-            Whether either LookAtInteractable or LookDuringMoveTo is in an additive expression
             </summary>
         </member>
         <member name="M:VirtualBeings.BehaviorComposition.Activities.LookIntermittentDuringMoveTo.#ctor(VirtualBeings.Tech.BehaviorComposition.IActivity,VirtualBeings.Tech.BehaviorComposition.Locomotion,VirtualBeings.Tech.BehaviorComposition.IEmoter,VirtualBeings.Tech.UnityIntegration.IInteractable,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Boolean,System.Boolean,System.Nullable{VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper})">
