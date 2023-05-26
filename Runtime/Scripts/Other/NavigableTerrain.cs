@@ -52,7 +52,7 @@ namespace VirtualBeings.Tech.Shared
         public static NavigableTerrain CreateNavigableTerrain(
             Collider collider,
             float? floorHeight = null,
-            float margin = 1f,
+            float margin = 0.1f,
             float refreshRate = -1f,
             bool localSpaceNavigation = false,
             Transform parent = null,
@@ -88,9 +88,9 @@ namespace VirtualBeings.Tech.Shared
 
             NavigableTerrain navTerrain = navGameObject.AddComponent<NavigableTerrain>();
 
-            navTerrain.NavigationAreaMargin         = Mathf.Max(margin, 0f);
-            navTerrain.NavigationAreaRefreshRate    = refreshRate;
-            navTerrain.EnableNavigableMeshDebugging = enableMeshDebugging;
+            navTerrain._margin         = Mathf.Max(margin, 0f);
+            navTerrain._navigationAreaRefreshRate    = refreshRate;
+            navTerrain._enableDebugView = enableMeshDebugging;
             navTerrain.NavigationIsInLocalSpace     = localSpaceNavigation;
 
             navTerrain.SetNavigableCollider(collider);
@@ -114,22 +114,23 @@ namespace VirtualBeings.Tech.Shared
                     return new Bounds();
             }
         }
-       
+
+        [SerializeField, Tooltip("The rate at which the main navigation collider should be refreshed. A negative value means static. In seconds")]
+        private float _navigationAreaRefreshRate = -1f;
 
         [SerializeField]
         private bool NavigationIsInLocalSpace;
 
-        [SerializeField, Min(0f)]
-        private float NavigationAreaMargin = 1f;
+        [SerializeField, Min(0f), Tooltip("Marge (in meter) around the navigable terrain limit to grow. Used as a safety measure.")]
+        private float _margin = 1f;
 
-        [SerializeField, Tooltip("The rate at which the main navigation collider should be refreshed. A negative value means static.")]
-        private float NavigationAreaRefreshRate = -1f;
+        [SerializeField, Header("Used to visualize navmeshes in the editor")]
+        private bool _enableDebugView;
 
         [SerializeField]
         private List<GameObject> SpawningPoints;
 
-        [SerializeField, Header("Use to visualize navmeshes in the editor")]
-        public bool EnableNavigableMeshDebugging;
+       
 
         [SerializeField]
         public Settings NavigableTerrainSettings = new();
@@ -191,9 +192,26 @@ namespace VirtualBeings.Tech.Shared
         public float     Epsilon                            => NavigableTerrainSettings.Epsilon;
         public float MaxTimePerFrameForNavigationProcessingInMs =>
             NavigableTerrainSettings.TimeInMsPerFrameForNavMeshProcessing;
-        public ILineSegmentVisualizer LineSegmentVisualizer { get; private set; }
+        public ILineSegmentVisualizer LineSegmentVisualizer
+        {
+            get => _lineSegmentVisualizer;
+            set
+            {
+                _lineSegmentVisualizer = value;
+                Container?.NavigableTerrainManager?.SetVisualizer(this, value);
+            }
+        }
+        private ILineSegmentVisualizer _lineSegmentVisualizer;
         public float                  FloorHeight           => transform.position.y;
-        public bool                   EnableDebugView       => EnableNavigableMeshDebugging;
+        public bool EnableDebugView
+        {
+            get => _enableDebugView;
+            set
+            {
+                _enableDebugView = value;
+                Container?.NavigableTerrainManager?.SetDebugView(this, value);
+            }
+        }
         public Vector3 CenterPosition
         {
             get
@@ -204,25 +222,22 @@ namespace VirtualBeings.Tech.Shared
                     return Vector3.zero;
             }
         }
-       
-
-        public float Margin => NavigationAreaMargin;
-
-        public float RefreshRate => NavigationAreaRefreshRate;
+        public float Margin => _margin;
+        public float RefreshRate
+        {
+            get => _navigationAreaRefreshRate;
+            set
+            {
+                _navigationAreaRefreshRate = value;
+                Container?.NavigableTerrainManager?.UpdateRefreshRate(this, value);
+            }
+        }
 
         public Vector3 CenterOfPlayerArea => _bounds.center;
         public float MinRadiusOfPlayerArea => Math.Min(_bounds.extents.x, _bounds.extents.z);
         public float MaxRadiusOfPlayerArea => Mathf.Sqrt(MMath.Sqr(_bounds.extents.x) + MMath.Sqr(_bounds.extents.z));
 
-        /// <summary>
-        /// The height of the navigable plane, with the HeightForGroundingRaycasts taken into account
-        ///
-        /// "true" navigable plane:                       ---------------------------------------
-        /// yOffset,                                       ↕ Settings.HeightForGroundingRaycasts
-        /// final height considered as the plane ceiling: =======================================
-        ///
-        /// </summary>
-        public bool IsInsideBounds(Vector3 position, float yOffset, float margin = 0)
+        public bool IsInsideBounds(Vector3 position, float yUnderOffset, float yMaxCeiling, float margin = 0)
         {
             Vector3 min = _bounds.min;
             Vector3 max = _bounds.max;
@@ -232,7 +247,8 @@ namespace VirtualBeings.Tech.Shared
                 position.x < max.x - margin &&
                 position.z > min.z + margin &&
                 position.z < max.z - margin &&
-                position.y >= transform.position.y - yOffset;
+                position.y >= transform.position.y - yUnderOffset &&
+                position.y <= transform.position.y + yMaxCeiling;
         }
 
         public float DistToBounds(Vector3 position)
@@ -379,6 +395,7 @@ namespace VirtualBeings.Tech.Shared
 
         Container Container => Container.Instance;
 
+
         protected virtual void Awake()
         {
             Init(Container.WorldEvents, Container.InteractionDB);
@@ -389,6 +406,14 @@ namespace VirtualBeings.Tech.Shared
             if (NavigableCollider != null)
             {
                 _worldEvents.Raise(new Event_World_RegisterNavigableTerrain(this));
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (NavigableCollider != null)
+            {
+                _worldEvents.Raise(new Event_World_UnregisterNavigableTerrain(this));
             }
         }
 

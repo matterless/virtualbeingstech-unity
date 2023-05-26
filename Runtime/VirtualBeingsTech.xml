@@ -20,6 +20,11 @@
             NB: This class used to be called 'ImmutableBeingData' (and still is in a lot of Unity-side code in some projects)
             </summary>
         </member>
+        <member name="P:VirtualBeings.Tech.ActiveCognition.BeingSettings.ComputedAge">
+            <summary>
+            Computed age, in years
+            </summary>
+        </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.BeingSettings.InitializeAnimationStateBase">
             <summary>
             Ensure that all static classes are properly initialized for use by KuteEngine. Necessary because use of
@@ -1973,6 +1978,54 @@
             <summary>
             </summary>
         </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.MouthTargeting.TargetFunc">
+            <summary>
+            Change target (can be null)
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.MouthTargeting.TargetIInteractable">
+            <summary>
+            Change target (can be null)
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.MouthTargeting.DoTargeting(System.Boolean,System.Boolean)">
+            <summary>
+            Use this after having set TargetFunc or TargetIInteractable. If we're Active *and* TargetIInteractable has been set *and*
+            pickup is true, then this will also tell the Actuator to attempt *one* mouth-pickup.
+            Otherwise (or if failed) the pickup is lost (i.e., it won't be reattempted automatically).
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.MouthTargeting.ForceTargeting(System.Single,System.Single,System.Func{System.Boolean})">
+            <summary>
+            Use this after having set TargetFunc or TargetIInteractable.
+            Unlike DoTargeting, this doesn't set up any mouth pickup and can therefore be used repeatedly (to adjust forced IK or UF)
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.MouthTargeting.ReleaseForcedTargeting(System.Single)">
+            <summary>
+            Actually just a wrapper to ForceTargeting(0f, ...)
+            </summary>
+        </member>
+        <member name="T:VirtualBeings.Tech.BehaviorComposition.Tail">
+            <summary>
+            (Charly) -> need a better name ?
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Tail.TransitionToBaseConfiguration(System.Single,System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+            Configure tail pose (height and curving)
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Tail.DoAdditiveTailExpression(VirtualBeings.Tech.BehaviorComposition.IAdditiveTailExpression,System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+            Move the tail in an expressive way
+            </summary>
+            <param name="additiveTailExpression">The type of the expression</param>
+            <param name="intensity01">E.g. how high the tail goes in a tail flap</param>
+            <param name="duration01">How enduring the expression is (not the same as speed; this may actually select different animations)</param>
+            <param name="speed01">Global speed multiplier</param>
+            <param name="angleInDegs">How far left (negative) or right (positive) the tail should lean during the expression</param>
+        </member>
         <member name="T:VirtualBeings.Tech.BehaviorComposition.Humanoids.LookAround">
             <summary>
             Look around for the humanoids.
@@ -2104,6 +2157,41 @@
             </summary>
             <param name="positionAtLastFrame"></param>
             <param name="rotationAtLastFrame"></param>
+        </member>
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.HeadStabilizerBehavior._dampedUrgencyFactor01">
+            <summary>
+            Stateful UF that we can damp upwards at each new stabilization episode
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.HeadStabilizerBehavior.InitialDampedUrgencyFactor01">
+            <summary>
+            Start value for _dampedUrgencyFactor01 (also when reset)
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.HeadStabilizerBehavior.MaxHeadDelta">
+            <summary>
+            How far we attempt to move the head to its world target position
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.HeadStabilizerBehavior.DampTimeCatchUp">
+            <summary>
+            How quickly is catchUpUrgency01 lerped towards normalizedCurrentToTargetDist?
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.HeadStabilizerBehavior.DampTimeUrgencyFactor">
+            <summary>
+            How quickly is _dampedUrgencyFactor01 lerped towards 1?
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.HeadStabilizerBehavior.MaxCatchUpSpeed">
+            <summary>
+            Absolute max speed with which offset head tries to catch up on animated position
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.HeadStabilizerBehavior.CutOffPoint">
+            <summary>
+            Above what value of catchUpUrgency01 do we start to catch up on animated head position?
+            </summary>
         </member>
         <member name="T:VirtualBeings.Tech.BehaviorComposition.Face">
             <summary>
@@ -3326,6 +3414,13 @@
         <member name="P:VirtualBeings.Tech.BehaviorComposition.Being.SecondaryVocalizationStatus">
             implementation of vocalization logic
         </member>
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Being.ScheduleSTVocalization(VirtualBeings.Tech.BehaviorComposition.IRS,VirtualBeings.Tech.BehaviorComposition.IST,System.Single,System.Single,System.Single,System.Single@)">
+            <summary>
+            Get data from the (unique if available, otherwise shared if available) being-settings
+            and vocalize during an FST or FOT.
+            </summary>
+            <returns>True if a vocalization was scheduled</returns>
+        </member>
         <member name="M:VirtualBeings.Tech.BehaviorComposition.Being.ScheduleFSTVocalization(VirtualBeings.Tech.BehaviorComposition.IFS,VirtualBeings.Tech.BehaviorComposition.IFST,System.Single,System.Single,System.Single,System.Single@)">
             <summary>
             Get data from the (unique if available, otherwise shared if available) being-settings
@@ -3386,7 +3481,7 @@
             which animation state there will be for the specific type of being.
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Being.InitializeBeing(VirtualBeings.Tech.ActiveCognition.BeingData,VirtualBeings.Tech.ActiveCognition.BeingSettings,VirtualBeings.Tech.ActiveCognition.BeingSharedSettings,VirtualBeings.Tech.UnityIntegration.NavigableTerrainManager.Settings,VirtualBeings.Tech.BehaviorComposition.IEmitter,VirtualBeings.Tech.Architecture.CharacterType)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Being.InitializeBeing(VirtualBeings.Tech.ActiveCognition.BeingData,VirtualBeings.Tech.ActiveCognition.BeingSettings,VirtualBeings.Tech.ActiveCognition.BeingSharedSettings,VirtualBeings.Tech.UnityIntegration.NavigableTerrainManager.Settings,VirtualBeings.Tech.Architecture.CharacterType)">
             <summary>
             Initialize the being with the given Data and Settings (either on creation or when deserializing when loading a save)
             </summary>
@@ -3403,12 +3498,11 @@
             Called after InitializeBeing()
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Being.StartBeing(VirtualBeings.Tech.BehaviorComposition.ExecutionType,VirtualBeings.Tech.BehaviorComposition.Being.NetworkMode,VirtualBeings.Tech.Network.NetworkInterface)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Being.StartBeing(VirtualBeings.Tech.BehaviorComposition.Being.NetworkMode,VirtualBeings.Tech.Network.NetworkInterface)">
             <summary>
             Start the Being with the given network mode (Host, Client, Local) and optionally a network interface if the mode is Host or Client.<br/>
             It will create the being's Actuator and optionally create the Mind Activity of the being (if Host or Local, but not on Client).
             </summary>
-            <param name="executionType"></param>
             <param name="networkMode"></param>
             <param name="networkInterface"></param>
         </member>
@@ -3421,7 +3515,7 @@
             <param name="networkInterface"></param>
             <returns></returns>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Being.StartMindBeing(VirtualBeings.Tech.BehaviorComposition.ExecutionType,VirtualBeings.Tech.UnityIntegration.IInteractable)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Being.StartMindBeing(VirtualBeings.Tech.UnityIntegration.IInteractable)">
             <summary>
             Start the lifecycle of the being as in, start the activities and the behavior of the being.
             Must be called ONLY on the device that has authority over it (call it when we are the server/host, but never if we are the client)
@@ -3679,13 +3773,13 @@
             TODO
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Stay.RequestST(VirtualBeings.Tech.BehaviorComposition.IST,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Stay.RequestST(VirtualBeings.Tech.BehaviorComposition.IST,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)">
             <summary>
             Request transition to ST (self transition). Note that unlike RS, ST are (1) not guarranteed and
             (2) interruptible by another ST request or a RS change request
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Stay.SetTargetRS(VirtualBeings.Tech.BehaviorComposition.IRS,VirtualBeings.Tech.BehaviorComposition.ITransitionType,System.Single,System.Single,System.Single,System.Single,System.Single)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Stay.SetTargetRS(VirtualBeings.Tech.BehaviorComposition.IRS,VirtualBeings.Tech.BehaviorComposition.ITransitionType,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)">
             <summary>
             Request new RS (root state); unless overridden by another request (or this behavior looses control),
             it is guaranteed that this change is eventually successful.
@@ -3700,6 +3794,56 @@
             <param name="transitionParameterA"></param>
             <param name="transitionParameterB"></param>
         </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Locomotion.Speed">
+            <summary>
+            The desired maximum speed. This interpolates between animations.
+            Neutral value depends on animation design.
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Locomotion.SpeedMultiplier01">
+            <summary>
+            The desired speed multiplier. This simply speeds up / slows down locomotion animations.
+            Neutral value is .5f.
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Locomotion.ArrivalDistance">
+            <summary>
+            How much in front of the goal the agent should stop. If 0, this Behavior will
+            try to move the agent-root precisely (on)to the goal.
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Locomotion.TargetTimeToFullStop">
+            <summary>
+            The desired crossfade time when ending locomotion
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Locomotion.OffsetLeftRight">
+            <summary>
+            Should we move with a left-preferred gait (-1), neutral (0) or right-preferred (1)?
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Locomotion.TryNiceStopIfPossible">
+            <summary>
+            Do the transition from a motion RS to a stopped RS using an OT rather than a crossfade.
+            Looks better, but is less precise.
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Locomotion.RemainingTraversibleDist">
+            <summary>
+            The distance remaining, minus ArrivalDistance.
+            NB: will initially be set to float.MaxValue for an undefined period of time
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Locomotion.TargetInteractable">
+            <summary>
+            Optional target. If set, Goal is automatically re-routed to its SalientPosition.
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Locomotion.Goal">
+            <summary>
+            Goal in world-space
+            </summary>
+        </member>
         <member name="T:VirtualBeings.Tech.BehaviorComposition.ServiceActivity">
             <summary>
             Service Activities provide a common set of functionnalities to be used by any Being.
@@ -3710,47 +3854,42 @@
             Ticks the Update()s of our Behaviors, then defers to base.PostUpdate()
             </summary>
         </member>
-        <member name="P:VirtualBeings.Tech.BehaviorComposition.Fly.Target">
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.Target">
             <summary>
             The current target of the bird (position in air, land position in ground, ...)
             </summary>
         </member>
-        <member name="F:VirtualBeings.Tech.BehaviorComposition.Fly.ObstacleDetector">
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.ObstacleDetector">
             <summary>
             Component that allow to store obstacle near the Being in real-time
             </summary>
         </member>
-        <member name="P:VirtualBeings.Tech.BehaviorComposition.Fly.DEBUG_LastRequestedFly">
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.DEBUG_LastRequestedFly">
             <summary>
             Last request fly made to this behavior. Only used for debug.
             </summary>
         </member>
-        <member name="P:VirtualBeings.Tech.BehaviorComposition.Fly.CurrentState">
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.CurrentState">
             <summary>
             Current flying state of the being.
             </summary>
         </member>
-        <member name="T:VirtualBeings.Tech.BehaviorComposition.Fly.FlyState">
-            <summary>
-            Describe the different possible state that a flying being can be in.
-            </summary>
-        </member>
-        <member name="F:VirtualBeings.Tech.BehaviorComposition.Fly.ChunkPathFinding">
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.ChunkPathFinding">
             <summary>
             Component that allow to create a path between chunks. Used by some FlyType and FLyService
             </summary>
         </member>
-        <member name="P:VirtualBeings.Tech.BehaviorComposition.Fly.SteeringVelocity">
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.SteeringVelocity">
             <summary>
             Velocity that's due to steering (on top of animation)
             </summary>
         </member>
-        <member name="F:VirtualBeings.Tech.BehaviorComposition.Fly.DEBUG_CurrentFlyBrick">
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.DEBUG_CurrentFlyBrick">
             <summary>
             Current Fly Type that is playing. Used for debug.
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Fly.Request``1(``0)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.Request``1(``0)">
             <summary>
             Request this Fly Behavior to execute a specific FlyBrick, given the FlyBrickData corresponding.
             </summary>
@@ -3758,7 +3897,7 @@
             <param name="flyBrickData"></param>
             <returns></returns>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Fly.IsRequestComplete">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.IsRequestComplete">
             <summary>
             Is the last request completed ? Use this to stop before yielding a frame for nothing when the Process is done. <br/>
             We check if the last children is done, before this children is stopping itself,
@@ -3766,18 +3905,18 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Fly.ResetSteering">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.ResetSteering">
             <summary>
             Reset all steering parameters (used when the bird is grounded)
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Fly.SetTargetRotation(UnityEngine.Quaternion)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.SetTargetRotation(UnityEngine.Quaternion)">
             <summary>
             Set current targetRotation. Used when starting to use FlyToTarget()
             </summary>
             <param name="targetRotation"></param>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Fly.FlyToTarget(UnityEngine.Vector3,System.Single,System.Single,System.Single,System.Boolean,System.Boolean)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.FlyToTarget(UnityEngine.Vector3,System.Single,System.Single,System.Single,System.Boolean,System.Boolean)">
             <summary>
             Set a target position for the being the fly to, using steering algorithm to translate and rotate mid-air.
             </summary>
@@ -3788,42 +3927,36 @@
             <param name="allowUpsideDown"></param>
             <param name="useVariation"></param>
         </member>
-        <member name="F:VirtualBeings.Tech.BehaviorComposition.Fly._setVelocityThisFrame">
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.FlyBehavior._setVelocityThisFrame">
             <summary>
             Do we apply a given velocity this frame for the being translation, insted of giving it a target ?
             </summary>
         </member>
-        <member name="F:VirtualBeings.Tech.BehaviorComposition.Fly._flyBrickEnumerator">
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.FlyBehavior._flyBrickEnumerator">
             <summary>
             Enumerator for current fly brick
             </summary>
         </member>
-        <member name="F:VirtualBeings.Tech.BehaviorComposition.Fly._requestedFly">
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.FlyBehavior._requestedFly">
             <summary>
             Current requested Fly
             </summary>
         </member>
-        <member name="T:VirtualBeings.Tech.BehaviorComposition.Fly.TargetData">
-            <summary>
-            A Target define an abstraction of a Target, be it a position in the ground or in air, with a given state..
-            TODO : extend its functionnality
-            </summary>
-        </member>
-        <member name="T:VirtualBeings.Tech.BehaviorComposition.Fly.IFlyBrick">
+        <member name="T:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.IFlyBrick">
             <summary>
             Interface to be able to get all the FlyService of a FlyType. (mainly used for debug)
             </summary>
         </member>
-        <member name="T:VirtualBeings.Tech.BehaviorComposition.Fly.IFlyBrickData">
+        <member name="T:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.IFlyBrickData">
             <summary>
             Struct data that should encapsulate a specific FlyBrick's data
             </summary>
         </member>
-        <member name="T:VirtualBeings.Tech.BehaviorComposition.Fly.AFlyBrick">
+        <member name="T:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.AFlyBrick">
             <summary>
-            A <see cref="T:VirtualBeings.Tech.BehaviorComposition.Fly.AFlyBrick"/> is a "brick" component that define the way that a being move when flying.<br/>
-            Fly bricks are not compositional (they cannot contain other fly bricks). Instead, composition is carried out by activities that use <see cref="T:VirtualBeings.Tech.BehaviorComposition.Fly"/>.<br/>
-            It will use, control, and order one or multiple <see cref="T:VirtualBeings.Tech.BehaviorComposition.Fly.AFlyService`1"/>. <br/>
+            A <see cref="T:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.AFlyBrick"/> is a "brick" component that define the way that a being move when flying.<br/>
+            Fly bricks are not compositional (they cannot contain other fly bricks). Instead, composition is carried out by activities that use <see cref="T:VirtualBeings.Tech.BehaviorComposition.FlyBehavior"/>.<br/>
+            It will use, control, and order one or multiple <see cref="T:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.AFlyService`1"/>. <br/>
             Example:<br/>
             - Land<br/>
             - FlyZigZag<br/>
@@ -3831,24 +3964,24 @@
             - ....<br/>
             </summary>
         </member>
-        <member name="F:VirtualBeings.Tech.BehaviorComposition.Fly.AFlyBrick._fly">
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.AFlyBrick._fly">
             <summary>
             Fly (behaviour) that should be the parent of this FlyType process.
             </summary>
         </member>
-        <member name="T:VirtualBeings.Tech.BehaviorComposition.Fly.FlyTo">
+        <member name="T:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.FlyTo">
             <summary>
             Flight describing the being motion to fly through the map between chunks if needed, and aim to land in a given position.
             Must face the landing position to end itself !
             </summary>
         </member>
-        <member name="T:VirtualBeings.Tech.BehaviorComposition.Fly.Hover">
+        <member name="T:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.Hover">
             <summary>
             Flight describing the being motion to fly through the map between chunks if needed, and aim to land in a given position.
             Must face the landing position to end itself !
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Fly.Hover.FlyToHoverPosition">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.Hover.FlyToHoverPosition">
              <summary>
              We want to reach the "target" defined by the nearest point on the surface of the sphere,
              defined by center = HoverPosition ; and radius = MaxDistanceToHoverFromCenter,
@@ -3859,13 +3992,13 @@
             
              </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Fly.Hover.FlyWhileAccelerating(UnityEngine.Vector3)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.Hover.FlyWhileAccelerating(UnityEngine.Vector3)">
             <summary>
             Accelerate toward target while Flying.
             </summary>
             <param name="toTarget"></param>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Fly.Hover.ClampDirectionAngleUpAxis(UnityEngine.Vector3,UnityEngine.Vector3,System.Single)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.Hover.ClampDirectionAngleUpAxis(UnityEngine.Vector3,UnityEngine.Vector3,System.Single)">
             <summary>
             Clamp a direction from Vector3.up axis.
             TODO : need to add it to misc to be accessible to all Fly Bricks
@@ -3875,7 +4008,7 @@
             <param name="maxAngle"></param>
             <returns></returns>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Fly.Land.MainProcess">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.Land.MainProcess">
              <summary>
              TODO :
              - Add LandDirection follow being forward, with certitude that we have it at the end of land (even if up or bottom)
@@ -3884,13 +4017,13 @@
              </summary>
              <returns></returns>
         </member>
-        <member name="T:VirtualBeings.Tech.BehaviorComposition.Fly.Pivot">
+        <member name="T:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.Pivot">
             <summary>
             Flight describing the being motion to fly through the map between chunks if needed, and aim to land in a given position.
             Must face the landing position to end itself !
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Fly.Pivot.MainProcess">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.Pivot.MainProcess">
             <summary>
             TODO :
             - HOver to pivot : bug transition rotation (y up, centripetal)
@@ -3902,11 +4035,11 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="T:VirtualBeings.Tech.BehaviorComposition.Fly.AFlyService`1">
+        <member name="T:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.AFlyService`1">
             <summary>
-            A <see cref="T:VirtualBeings.Tech.BehaviorComposition.Fly.AFlyService`1"/> describe a specific part of a fly type. It should describe a specific way of flying. <br/>
-            To do that, a FlyService need to be initialized (see <see cref="M:VirtualBeings.Tech.BehaviorComposition.Fly.AFlyService`1.InitializeSpecific"/>) with a <see cref="T:VirtualBeings.Tech.BehaviorComposition.Fly.IFlyServiceData"/> object. <br/>
-            Then, it need to calculate a <see cref="T:VirtualBeings.Tech.BehaviorComposition.Fly.FlyData"/> object (see <see cref="M:VirtualBeings.Tech.BehaviorComposition.Fly.AFlyService`1.ComputeSpecific"/>) that contain a force to apply to the being who is flying. <br/>
+            A <see cref="T:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.AFlyService`1"/> describe a specific part of a fly type. It should describe a specific way of flying. <br/>
+            To do that, a FlyService need to be initialized (see <see cref="M:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.AFlyService`1.InitializeSpecific"/>) with a <see cref="T:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.IFlyServiceData"/> object. <br/>
+            Then, it need to calculate a <see cref="T:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.FlyData"/> object (see <see cref="M:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.AFlyService`1.ComputeSpecific"/>) that contain a force to apply to the being who is flying. <br/>
             Example :<br/>
             - TakeOff<br/>
             - Land<br/>
@@ -3915,61 +4048,61 @@
             - ... <br/>
             </summary>
         </member>
-        <member name="P:VirtualBeings.Tech.BehaviorComposition.Fly.AFlyService`1.lastFlyData">
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.AFlyService`1.lastFlyData">
             <summary>
             Last FlyData that was computed by this service.
             </summary>
         </member>
-        <member name="F:VirtualBeings.Tech.BehaviorComposition.Fly.AFlyService`1.data">
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.AFlyService`1.data">
             <summary>
             Data given at initialization that allow to compute this service.
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Fly.AFlyService`1.Initialize(`0)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.AFlyService`1.Initialize(`0)">
             <summary>
-            Initialize this FlyService with specific Data for this service to be able to compute a <see cref="T:VirtualBeings.Tech.BehaviorComposition.Fly.FlyData"/> result.<br/>
+            Initialize this FlyService with specific Data for this service to be able to compute a <see cref="T:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.FlyData"/> result.<br/>
             A FlyService must be initialized before computing !
             </summary>
             <param name="data"></param>
             <returns></returns>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Fly.AFlyService`1.Compute">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.AFlyService`1.Compute">
             <summary>
             Given the data at initialization, compute the different forces that should impact the velocity of the being.
             </summary>
             <returns></returns>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Fly.AFlyService`1.ComputeSpecific">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.AFlyService`1.ComputeSpecific">
             <summary>
             Given the data at initialization, compute the different forces that should impact the velocity of the being.<br/>
             Each implemented service should compute it's own forces based on it's role (Avoid collider ? Follow a Path ? ...)
             </summary>
             <returns></returns>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Fly.AFlyService`1.InitializeSpecific">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.AFlyService`1.InitializeSpecific">
             <summary>
             If there is a need to give specific instructions when initializing this FlyService when receiveing FlyServiceData at initialization, override this method.<br/>
             This method is optionnal.
             </summary>
             <returns></returns>
         </member>
-        <member name="T:VirtualBeings.Tech.BehaviorComposition.Fly.IFlyServiceData">
+        <member name="T:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.IFlyServiceData">
             <summary>
             Data that should contains all necessary data for a FlyService to compute.
             </summary>
         </member>
-        <member name="T:VirtualBeings.Tech.BehaviorComposition.Fly.FlyData">
+        <member name="T:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.FlyData">
             <summary>
             Struct containing all the necessary data to apply a force for a flying being.
             It describe the direction and magnitude of the force, and an influence for the given direction.
             </summary>
         </member>
-        <member name="T:VirtualBeings.Tech.BehaviorComposition.Fly.AvoidanceService">
+        <member name="T:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.AvoidanceService">
             <summary>
             FlyService that allow to avoid obstacle close to the being, by calculating an opposite direction for each colliders.
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Fly.AvoidanceService.ComputeSpecific">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.AvoidanceService.ComputeSpecific">
              <summary>
              Use 2 cone : small and big, to calcul avoidance of collider found inside the sphere (collidertrigger).
              Check the closest position from bird to collider
@@ -3982,24 +4115,24 @@
              </summary>
              <returns></returns>
         </member>
-        <member name="F:VirtualBeings.Tech.BehaviorComposition.Fly.AvoidanceData.MinAngleMaxAvoidance01">
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.AvoidanceData.MinAngleMaxAvoidance01">
             <summary>
             Minimum angle compared to the beings's forward, where the collider is considered as max threat to avoid.
             </summary>
         </member>
-        <member name="F:VirtualBeings.Tech.BehaviorComposition.Fly.AvoidanceData.MaxBackDistance">
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.AvoidanceData.MaxBackDistance">
             <summary>
             Max distance at the back of the being, where we consider the collider to avoid (from 0 to this value).
             </summary>
         </member>
-        <member name="F:VirtualBeings.Tech.BehaviorComposition.Fly.AvoidanceData.MinDotFront01">
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.AvoidanceData.MinDotFront01">
             <summary>
             Min Dot value (0 ; 1) to consider the collider in front of us
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Fly.PathFollowService.ComputeSpecific">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.PathFollowService.ComputeSpecific">
             <summary>
-            Each time we compute this service, we store the last current path in the parameter <see cref="P:VirtualBeings.Tech.BehaviorComposition.Fly.PathFollowService.currentPath"/>, so that when we re-call this function,<br/>
+            Each time we compute this service, we store the last current path in the parameter <see cref="P:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.PathFollowService.currentPath"/>, so that when we re-call this function,<br/>
             we dont start from the initial path, but the last one that we stored.<br/>
             <br/>
             It means that, even if we dont re-compute the path and initialize this service with a new path, meaning that we only created a Path one time at the beginning and never after,<br/>
@@ -4009,21 +4142,32 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="F:VirtualBeings.Tech.BehaviorComposition.Fly.PathData.weightFacingWindows">
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.PathData.weightFacingWindows">
             <summary>
             Weight for direction to windows center, when the being is already facing the windows
             </summary>
         </member>
-        <member name="F:VirtualBeings.Tech.BehaviorComposition.Fly.PathData.weightNotFacingWindows">
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.PathData.weightNotFacingWindows">
             <summary>
             Weight for direction to windows center, when the being is not facing the windows
             </summary>
         </member>
-        <member name="T:VirtualBeings.Tech.BehaviorComposition.Fly.WanderService">
+        <member name="T:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.WanderService">
             <summary>
             Wander in the open space.
             Choose a chunk randomly ?
             GO to this chunk
+            </summary>
+        </member>
+        <member name="T:VirtualBeings.Tech.BehaviorComposition.FlyTarget">
+            <summary>
+            A Target define an abstraction of a Target, be it a position in the ground or in air, with a given state..
+            TODO : extend its functionnality
+            </summary>
+        </member>
+        <member name="T:VirtualBeings.Tech.BehaviorComposition.FlyState">
+            <summary>
+            Describe the different possible state that a flying being can be in.
             </summary>
         </member>
         <member name="P:VirtualBeings.Tech.BehaviorComposition.FloatToBehavior.Goal">
@@ -4031,7 +4175,7 @@
             Goal in world-space
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.FloatToBehavior.Start(VirtualBeings.Tech.BehaviorComposition.IRS,VirtualBeings.Tech.BehaviorComposition.IRS,UnityEngine.Vector3,System.Single)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.FloatToBehavior.Start(VirtualBeings.Tech.BehaviorComposition.IRS,UnityEngine.Vector3,System.Single,System.Single,System.Single)">
             <summary>
             Configurable starter
             </summary>
@@ -4114,7 +4258,7 @@
             ITransitionType: interface for transitions between RS
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.IVocalizationList.GetRandomVocalization(System.Single)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.VocalizationList.GetRandomVocalization(System.Single)">
             <summary>
             Returns a random VocalAnimation whose DefaultDuration is 'probably' not
             too far from preferredDuration, though this is not guaranteed.
@@ -4222,11 +4366,6 @@
             <param name="nextExitTimeVariation">If >= 0, refers to index of STTransitionInfo</param>
             <param name="suppress">Curve that determines how much the current BA should be suppressed over the course of the ST</param>
             <param name="maxCrossFadeDurationOfTransitionParameters"></param>
-        </member>
-        <member name="T:VirtualBeings.Tech.BehaviorComposition.ExecutionType">
-            <summary>
-            Don't change order / numbers
-            </summary>
         </member>
         <member name="T:VirtualBeings.Tech.BehaviorComposition.BodyResetType">
             <summary>
@@ -4752,7 +4891,7 @@
             Select which stationary RS we target
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.MoveToBehavior.SetTargetRS(VirtualBeings.Tech.BehaviorComposition.IRS,VirtualBeings.Tech.BehaviorComposition.ITransitionType,System.Single,System.Single,System.Single,System.Single,System.Single)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.MoveToBehavior.SetTargetRS(VirtualBeings.Tech.BehaviorComposition.IRS,VirtualBeings.Tech.BehaviorComposition.ITransitionType,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)">
             <summary>
             Request new RS (root state); unless overridden by another request (or this behavior looses control),
             it is guaranteed that this change is eventually successful.
@@ -4924,7 +5063,7 @@
             Select which stationary RS we target
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.StayBehavior.SetTargetRS(VirtualBeings.Tech.BehaviorComposition.IRS,VirtualBeings.Tech.BehaviorComposition.ITransitionType,System.Single,System.Single,System.Single,System.Single,System.Single)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.StayBehavior.SetTargetRS(VirtualBeings.Tech.BehaviorComposition.IRS,VirtualBeings.Tech.BehaviorComposition.ITransitionType,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)">
             <summary>
             Request new RS (root state); unless overriden by another request, the Actuator guarantees that this change
             is eventually successful.
@@ -4966,7 +5105,7 @@
             How far could we go (not necessarily on a straight line) if we tried ot reach goal via pathfinding?
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.StayBehavior.RequestST(VirtualBeings.Tech.BehaviorComposition.IST,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.StayBehavior.RequestST(VirtualBeings.Tech.BehaviorComposition.IST,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)">
             <summary>
             Request transition to ST (self transition). Note that unlike RS, ST are (1) not guarranteed and
             (2) interruptible by another ST request or a RS change request
@@ -5193,6 +5332,102 @@
             <summary>
             What kind of landing spot should we flee to?
             </summary>
+        </member>
+        <member name="T:VirtualBeings.Tech.Beings.Bird.BirdStay">
+            <summary>
+            TODO
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.Beings.Bird.BirdStay.RequestST(VirtualBeings.Tech.BehaviorComposition.IST,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+            Request transition to ST (self transition). Note that unlike RS, ST are (1) not guarranteed and
+            (2) interruptible by another ST request or a RS change request
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.Beings.Bird.BirdStay.SetTargetRS(VirtualBeings.Tech.BehaviorComposition.IRS,VirtualBeings.Tech.BehaviorComposition.ITransitionType,System.Single,System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+            Request new RS (root state); unless overridden by another request (or this behavior looses control),
+            it is guaranteed that this change is eventually successful.
+            NB: transition type needs to be set procedurally for now.
+            </summary>
+            <param name="targetRS"></param>
+            <param name="transitionType">Note that this may be overriden if a functional TransitionType is needed
+            to leave/arrive at an angle etc.</param>
+            <param name="transitionSpeed01"></param>
+            <param name="transitionIntensity01"></param>
+            <param name="transitionLeftRight"></param>
+            <param name="transitionParameterA"></param>
+            <param name="transitionParameterB"></param>
+        </member>
+        <member name="T:VirtualBeings.Tech.Beings.Bird.Fly">
+            <summary>
+            Basic Fly Service Activity. Mainly used to create simple Fly command or pattern.
+            For simpler and better request to fly, use already exisiting FLy Service Activity like <see cref="T:VirtualBeings.Tech.Beings.Bird.FlyToSafety"/>, <see cref="T:VirtualBeings.Tech.Beings.Bird.FlyToGroundTarget"/>
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.Beings.Bird.Fly.TakeOff(VirtualBeings.Tech.Beings.Bird.TransitionTypeBirdBase,System.Boolean)">
+            <summary>
+            Request the Being to TakeOff, which will make it enter a flying state. Only entry point to flying. Use it before using other fly query.
+            </summary>
+            <param name="transitionTypeBirdBase"></param>
+            <param name="toHover"></param>
+            <returns></returns>
+        </member>
+        <member name="M:VirtualBeings.Tech.Beings.Bird.Fly.Pivot(System.Func{UnityEngine.Vector3},System.Func{UnityEngine.Vector3},System.Func{System.Single},System.Single)">
+            <summary>
+            Make a circular pattern while flying, around a center in world-space. Must be already flying.
+            </summary>
+            <param name="pivotCenterProvider"></param>
+            <param name="pivotNormal"></param>
+            <param name="pivotRadius"></param>
+            <param name="timeToPivot"></param>
+            <returns></returns>
+        </member>
+        <member name="M:VirtualBeings.Tech.Beings.Bird.Fly.Hover(System.Func{UnityEngine.Vector3},System.Func{UnityEngine.Vector3},System.Single,System.Nullable{System.Single})">
+            <summary>
+            Make the being hover at a position mid-air. Must be already flying.
+            </summary>
+            <param name="lookAtProvider"></param>
+            <param name="hoverPositionProvider"></param>
+            <param name="timeToHover"></param>
+            <param name="maxLeftRightAngle"></param>
+            <returns></returns>
+        </member>
+        <member name="M:VirtualBeings.Tech.Beings.Bird.Fly.Land(System.Func{UnityEngine.Vector3},System.Func{UnityEngine.Vector3})">
+            <summary>
+            Make the Being land on a grounded / platform / finger and stop the Fly. Must be already flying.
+            </summary>
+            <param name="landPositionProvider"></param>
+            <param name="landDirectionProvider"></param>
+            <returns></returns>
+        </member>
+        <member name="M:VirtualBeings.Tech.Beings.Bird.Fly.FlyTo(System.Func{UnityEngine.Vector3},System.Nullable{System.Single},System.Single,System.Boolean)">
+            <summary>
+            Make the Being fly to a position mid-air. Must be already flying.
+            </summary>
+            <param name="computeTargetPosition"></param>
+            <param name="maxLeftRightAngle"></param>
+            <param name="distanceToReachTarget"></param>
+            <param name="allowBoundingFlight"></param>
+            <returns></returns>
+        </member>
+        <member name="M:VirtualBeings.Tech.Beings.Bird.Fly.LandOnPerch(VirtualBeings.Tech.UnityIntegration.IPerch,VirtualBeings.Tech.Beings.Bird.Fly.OrientationType)">
+            <summary>
+            Make the Being land on a perch (finger, perch point).
+            </summary>
+            <param name="perch"></param>
+            <param name="orientation"></param>
+            <returns></returns>
+        </member>
+        <member name="M:VirtualBeings.Tech.Beings.Bird.Fly.SetRootParentProvider(VirtualBeings.Tech.UnityIntegration.IRootParentProvider,System.Boolean,System.Single,System.Single,System.Single)">
+            <summary>
+            TODO(Raph) Need to be improved and simplified for users
+            </summary>
+            <param name="rootParentProvider"></param>
+            <param name="doGrip"></param>
+            <param name="gripIntensity01"></param>
+            <param name="gripLeftRight"></param>
+            <param name="gripUrgencyFactor01"></param>
         </member>
         <member name="T:VirtualBeings.Tech.Beings.Bird.StabilizeHead">
              <summary>
@@ -6432,14 +6667,36 @@
             Manage all navigable terrain in the current context.
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.UnityIntegration.NavigableTerrainManager.FindOwningNavigableTerrain(UnityEngine.Vector3,System.Single,System.Single)">
+        <member name="M:VirtualBeings.Tech.UnityIntegration.NavigableTerrainManager.FindOwningNavigableTerrain(UnityEngine.Vector3,System.Single,System.Single,System.Single)">
             <summary>
             Get the first NavigableTerrain that contains the given position.
             </summary>
             <param name="position"></param>
             <param name="yOffset"></param>
+            <param name="yMaxCeiling"></param>
             <param name="margin"></param>
             <returns></returns>
+        </member>
+        <member name="M:VirtualBeings.Tech.UnityIntegration.NavigableTerrainManager.SetVisualizer(VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain,VirtualBeings.Tech.UnityIntegration.ILineSegmentVisualizer)">
+            <summary>
+            Set the visualizer of the mesh associated to the gien Navigable Terrain
+            </summary>
+            <param name="navTerrain"></param>
+            <param name="lineSegmentVisualizer"></param>
+        </member>
+        <member name="M:VirtualBeings.Tech.UnityIntegration.NavigableTerrainManager.SetDebugView(VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain,System.Boolean)">
+            <summary>
+            Set the debug view of the mesh associated to the given Navigable Terrain
+            </summary>
+            <param name="navTerrain"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:VirtualBeings.Tech.UnityIntegration.NavigableTerrainManager.UpdateRefreshRate(VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain,System.Single)">
+            <summary>
+            Update the refresh rate of the mesh associated to the given NavigableTerrain
+            </summary>
+            <param name="navTerrain"></param>
+            <param name="newRefreshRate"></param>
         </member>
         <member name="T:VirtualBeings.Tech.UnityIntegration.SoundManager">
             <summary>
@@ -6641,6 +6898,11 @@
             steering is unable to avoid an obstacle adequately, making collision likely,
             </summary>
         </member>
+        <member name="F:VirtualBeings.Tech.UnityIntegration.DistressType.Falling">
+            <summary>
+            There is no Navigable Terrain under the being, but there should be.
+            </summary>
+        </member>
         <member name="P:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.NavigationCollider">
             <summary>
             The collider defining the navigable area
@@ -6691,6 +6953,7 @@
         <member name="P:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.LineSegmentVisualizer">
             <summary>
             Optional debug visualizer for the underlying navmesh
+            TODO : Separate the data and visual
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.RegisterGameObjectAsObstacle(UnityEngine.GameObject,System.Single,System.Single)">
@@ -6703,7 +6966,7 @@
             Call UnregisterGameObjectAsObstacle for all navservers
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.IsInsideBounds(UnityEngine.Vector3,System.Single,System.Single)">
+        <member name="M:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.IsInsideBounds(UnityEngine.Vector3,System.Single,System.Single,System.Single)">
             <summary>
             Return true if the given position is inside this NavigableTerrain.
             </summary>
@@ -6715,7 +6978,8 @@
             yOffset,                                       ↕ Settings.HeightForGroundingRaycasts
             final height considered as the plane ceiling: =======================================
             </param>
-            <param name="margin"></param>
+            <param name="yMaxCeiling">Optionnal max ceiling to check if the position given is under it</param>
+            <param name="marginXZ"></param>
             <returns></returns>
         </member>
         <member name="P:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.FloorHeight">
@@ -7898,6 +8162,11 @@
         <member name="P:VirtualBeings.Tech.UnityIntegration.Rand.sign">
             <summary>
             Returns either -1 or 1, never 0
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.UnityIntegration.Rand.SignedValue">
+            <summary>
+            [-1; 1]
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.UnityIntegration.Rand.Range(System.Int32,System.Int32)">
@@ -9529,13 +9798,16 @@
             Threshold angle in degrees that determines when we should start moving the head while looking at a target.
             </summary>
         </member>
-        <member name="M:VirtualBeings.Beings.Floater.Activities.FloatTo.Start(VirtualBeings.Tech.BehaviorComposition.IRS,VirtualBeings.Tech.BehaviorComposition.IRS,UnityEngine.Vector3)">
+        <member name="M:VirtualBeings.Beings.Floater.FloatTo.Start(VirtualBeings.Tech.BehaviorComposition.IRS,UnityEngine.Vector3,System.Single,System.Single,System.Single)">
             <summary>
             
             </summary>
             <param name="floatRs"></param>
             <param name="targetRs">The target RootState that should be requested when the being has finished floating</param>
             <param name="goal"></param>
+            <param name="yTakeOff">The height to lift to during the takeoff</param>
+            <param name="yLand">The height to reach before landing</param>
+            <param name="rotationSpeed">Rotation speed during floating</param>
             <returns></returns>
         </member>
         <member name="T:VirtualBeings.Beings.Floater.Infrastructure.RSFloaterBase">
