@@ -105,8 +105,14 @@ namespace VirtualBeings.Tech.UnityIntegration
                     {
                         using (var editingScope = new PrefabUtility.EditPrefabContentsScope(assetPath))
                         {
-                            GameObject floaterPrefab = editingScope.prefabContentsRoot;
-                            Being beingScope = floaterPrefab.GetComponent<Being>();
+                            GameObject beingPrefab = editingScope.prefabContentsRoot;
+                            Being beingScope = beingPrefab.GetComponent<Being>();
+
+                            if(beingScope == null)
+                            {
+                                Debug.LogWarning("No Being script found on the prefab. Did you apply the change on the prefab after adding the Being component ?");
+                                return;
+                            }
                             ConfigureBeing(beingScope);
                         }
                     }

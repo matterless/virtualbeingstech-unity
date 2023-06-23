@@ -151,6 +151,8 @@ namespace VirtualBeings.Tech.Shared
         public IAgent     DestroyedBy     { get; private set; }
         public Quaternion CenterRotation  => transform.rotation;
         public Vector3    SalientPosition => transform.position;
+        public Quaternion SalientRotation => transform.rotation;
+
         public bool IsInInteractionDB() => false; // terrains aren't saved to interactionDB
         public bool HasProperty(InteractableProperty property) => false; // no properties
         public void Destroy(IAgent _ = null) => Destroy(gameObject);

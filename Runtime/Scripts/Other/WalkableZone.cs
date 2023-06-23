@@ -120,6 +120,7 @@ namespace VirtualBeings.Tech.Shared
         public Vector3 CenterPosition => RootPosition;
         public Quaternion CenterRotation => RootRotation;
         public Vector3 SalientPosition => RootPosition;
+        public Quaternion SalientRotation => RootRotation;
 
         public Vector3 Velocity { get; set; } // administered by SpatialDB, dont change manually
         public Vector3 ___PrevPosition { get; set; } // administered by SpatialDB, dont use

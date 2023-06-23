@@ -4,6 +4,53 @@
         <name>VirtualBeingsTech</name>
     </assembly>
     <members>
+        <member name="T:VirtualBeings.ActiveCognition.Communication.ApiError">
+            <summary>
+            Defines errors when interacting with the OpenAI API (or compatible chat APIs).
+            </summary>
+        </member>
+        <member name="T:VirtualBeings.ActiveCognition.Communication.ChatChoice">
+            <summary>
+            Struct that matches a part of the Json used in interacting with the OpenAI API (or compatible chat APIs).
+            See https://platform.openai.com/docs/api-reference/making-requests
+            </summary>
+        </member>
+        <member name="T:VirtualBeings.ActiveCognition.Communication.ChatCompletionRequestPayload">
+            <summary>
+            This is the part of the request that is Json serialized and sent to the OpenAI API.
+            See https://platform.openai.com/docs/api-reference/making-requests
+            </summary>
+        </member>
+        <member name="T:VirtualBeings.ActiveCognition.Communication.ChatCompletionRequest">
+            <summary>
+            Wrapper object for a request to the OpenAI API (or compatible chat APIs).
+            The point of this class is to encapsulate onChatComplete and OnResponse via
+            closures, which allows chat requests to be cancelled.
+            </summary>
+        </member>
+        <member name="T:VirtualBeings.ActiveCognition.Communication.ChatCompletionResponse">
+            <summary>
+            This is the part of the response that is Json serialized and sent by the OpenAI API.
+            See https://platform.openai.com/docs/api-reference/completions
+            </summary>
+        </member>
+        <member name="T:VirtualBeings.ActiveCognition.Communication.ChatMessage">
+            <summary>
+            An entry in a list of messages to be sent to the OpenAI API (or compatible chat APIs).
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.ActiveCognition.Communication.ChatMessage.Role">
+            <summary>
+            This currently needs to follow OpenAI's convention and be one of: system, user, assistant.
+            See https://platform.openai.com/docs/api-reference/chat
+            </summary>
+        </member>
+        <member name="T:VirtualBeings.ActiveCognition.Communication.Usage">
+            <summary>
+            This is the part of the response that is Json serialized and sent by the OpenAI API.
+            See https://platform.openai.com/docs/api-reference/completions/create
+            </summary>
+        </member>
         <member name="T:VirtualBeings.ActiveCognition.IEatTrackerSettings">
             <summary>
             Should be implemented by the being settings
@@ -417,7 +464,7 @@
         <member name="M:VirtualBeings.Tech.ActiveCognition.PathInspector.VisitAndCheckIfComplete(VirtualBeings.Tech.ActiveCognition.Pathfinder.PathNode)">
             <summary>
             Override this to check if a pathnode is good (enough), returning true will make RSBF stop immediately.
-            IMPORTANT: before returning true, overriding methods MUST call SetNewGoal() with a point inside the node! 
+            IMPORTANT: before returning true, overriding methods MUST call SetNewGoal() with a point inside the node!
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.PathInspector.IsTraversible(VirtualBeings.Tech.ActiveCognition.Symedge)">
@@ -487,7 +534,7 @@
         <member name="P:VirtualBeings.Tech.ActiveCognition.RelationshipTracker.Relationships">
             public interface
         </member>
-        <member name="M:VirtualBeings.Tech.ActiveCognition.RelationshipTracker.InitSpecific">
+        <member name="M:VirtualBeings.Tech.ActiveCognition.RelationshipTracker.Init">
             internals
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.RelationshipTracker.SetRelationship(VirtualBeings.Tech.BehaviorComposition.Being,System.Boolean)">
@@ -506,7 +553,12 @@
             <summary>
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.ActiveCognition.Communicator.InitSpecific">
+        <member name="M:VirtualBeings.Tech.ActiveCognition.Communicator.RegisterUtteranceResponder(VirtualBeings.Tech.BehaviorComposition.Behavior,System.Func{VirtualBeings.Tech.UnityIntegration.IAgent,System.String,System.Single},System.Action{VirtualBeings.Tech.UnityIntegration.IAgent,System.String})">
+            <summary>
+            Only call if you are the behavior that currently owns the 'VOICE' BodyDomain !! (Looking at you Raph)
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.ActiveCognition.Communicator.Init">
             internals
         </member>
         <member name="T:VirtualBeings.Tech.ActiveCognition.InteractionTracker">
@@ -861,21 +913,21 @@
             </summary>
         </member>
         <member name="T:VirtualBeings.Tech.ActiveCognition.DynamicallyConstrainedDelaunayTriangulation">
-            <summary>
-            The main class of this project. It represents a "dynamically constrained Delaunay triangulation" (DCDT).
-            It is based on publications by Prof. Marcelo Kallmann, University of California at Merced, and his
-            colleagues. See especially the following two papers:
-              Kallmann et al., Fully Dynamic Constrained Delaunay Triangulations, 2003 (on the DCDT)
-              Kallmann, Navigation Queries from Triangular Meshes, 2010 (on the Symedge datastructure)
+             <summary>
+             The main class of this project. It represents a "dynamically constrained Delaunay triangulation" (DCDT).
+             It is based on publications by Prof. Marcelo Kallmann, University of California at Merced, and his
+             colleagues. See especially the following two papers:
+               Kallmann et al., Fully Dynamic Constrained Delaunay Triangulations, 2003 (on the DCDT)
+               Kallmann, Navigation Queries from Triangular Meshes, 2010 (on the Symedge datastructure)
             
-            The main point of the DCDT is to represent a navigation mesh (navmesh) that:
-            - is *tight* (there is no space between obstacles and the mesh, as in almost all other navmeshes),
-            - is dynamic (obstacles, i.e., 'constraints', can be added and removed efficiently at run-time; movement
-              of constraints is simulated as removal/reinsertion at the desired frequency),
-            - supports efficient path-finding: because all edges in the DCDT are either constrained or fulfill the
-              Delaunay property, triangles with very small angles are rare. Paths can be extracted efficiently
-              with rubber-string best-first search (RS-BF).
-            </summary>
+             The main point of the DCDT is to represent a navigation mesh (navmesh) that:
+             - is *tight* (there is no space between obstacles and the mesh, as in almost all other navmeshes),
+             - is dynamic (obstacles, i.e., 'constraints', can be added and removed efficiently at run-time; movement
+               of constraints is simulated as removal/reinsertion at the desired frequency),
+             - supports efficient path-finding: because all edges in the DCDT are either constrained or fulfill the
+               Delaunay property, triangles with very small angles are rare. Paths can be extracted efficiently
+               with rubber-string best-first search (RS-BF).
+             </summary>
         </member>
         <member name="P:VirtualBeings.Tech.ActiveCognition.DynamicallyConstrainedDelaunayTriangulation.Mesh">
             <summary>
@@ -933,13 +985,13 @@
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.DynamicallyConstrainedDelaunayTriangulation.CheckBoundingBox(VirtualBeings.Tech.Utils.PolyLine,System.Boolean@)">
-            <summary>
-            Used internally to check if bb is a convex quadrilateral. The four points p0..p3 define 
-            such a quadrilateral if p2 is on the same side of p0->p1 as p3 is of p1->p2.
+             <summary>
+             Used internally to check if bb is a convex quadrilateral. The four points p0..p3 define
+             such a quadrilateral if p2 is on the same side of p0->p1 as p3 is of p1->p2.
             
-            The bounding box should always be set by hand; hence, this function does not check for numerically
-            degenerate cases.
-            </summary>
+             The bounding box should always be set by hand; hence, this function does not check for numerically
+             degenerate cases.
+             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.DynamicallyConstrainedDelaunayTriangulation.InitializeDCDT(VirtualBeings.Tech.Utils.PolyLine,System.Double,System.Collections.Generic.Dictionary{System.Int32,VirtualBeings.Tech.Utils.Set{VirtualBeings.Tech.ActiveCognition.Edge}})">
             <summary>
@@ -969,15 +1021,15 @@
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.DynamicallyConstrainedDelaunayTriangulation.InsertPolyLine(VirtualBeings.Tech.Utils.PolyLine,System.Boolean,System.Int32)">
-            <summary>
-            Insert a set of line constraints into the triangulation.
-            Begin by inserting points and triangulating, then insert lines to make
-            sure they are part of the triangulation.
+             <summary>
+             Insert a set of line constraints into the triangulation.
+             Begin by inserting points and triangulating, then insert lines to make
+             sure they are part of the triangulation.
             
-            We now allow insertion of both polylines and collections of segments via a parameter. For simplicity's sake,
-            the latter also use the PolyLine class, but they must contain an even number of points, and only the odd
-            pairs are assumed to be line segments).
-            </summary>
+             We now allow insertion of both polylines and collections of segments via a parameter. For simplicity's sake,
+             the latter also use the PolyLine class, but they must contain an even number of points, and only the odd
+             pairs are assumed to be line segments).
+             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.DynamicallyConstrainedDelaunayTriangulation.InsertSegment(VirtualBeings.Tech.ActiveCognition.Vertex,VirtualBeings.Tech.ActiveCognition.Vertex,System.Int32)">
             <summary>
@@ -1031,14 +1083,14 @@
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.DynamicallyConstrainedDelaunayTriangulation.DeletePolyline(System.Int32)">
-            <summary>
-            Delete the constraint with the given id, throws a NonExistentConstraintException if
-            a constraint with this idea does not exist in the DCDT.
+             <summary>
+             Delete the constraint with the given id, throws a NonExistentConstraintException if
+             a constraint with this idea does not exist in the DCDT.
             
-            Note that it is not guaranteed that the mesh is identical before insertion and after
-            deletion, as DeletePolyline() cannot always remove 'administrative' vertices (which
-            had to be inserted to accomodate existing constraints) and for numerical reasons.
-            </summary>
+             Note that it is not guaranteed that the mesh is identical before insertion and after
+             deletion, as DeletePolyline() cannot always remove 'administrative' vertices (which
+             had to be inserted to accomodate existing constraints) and for numerical reasons.
+             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.DynamicallyConstrainedDelaunayTriangulation.DeleteVertexAndRetriangulate(VirtualBeings.Tech.ActiveCognition.Symedge)">
             <summary>
@@ -1089,16 +1141,16 @@
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.DynamicallyConstrainedDelaunayTriangulation.IsDelaunay_Precise(VirtualBeings.Tech.ActiveCognition.Symedge)">
-            <summary>
-            Test if the current edge has the (local) Delaunay property.
-            This is the case if the circumcircle of the three vertices of
-            the present triangle does not (properly) contain the far vertex
-            of the opposing triangle.
+             <summary>
+             Test if the current edge has the (local) Delaunay property.
+             This is the case if the circumcircle of the three vertices of
+             the present triangle does not (properly) contain the far vertex
+             of the opposing triangle.
             
-            If all four vertices are cocircular, the edge is Delaunay.
+             If all four vertices are cocircular, the edge is Delaunay.
             
-            This new version is more numerically robust (see code).
-            </summary>
+             This new version is more numerically robust (see code).
+             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.DynamicallyConstrainedDelaunayTriangulation.CheckTopologicalIntegrityOfDCDT(System.Boolean)">
             <summary>
@@ -1117,21 +1169,21 @@
             </summary>
         </member>
         <member name="T:VirtualBeings.Tech.ActiveCognition.Mesh">
-            <summary>
-            Class that represents and manages a 2D-mesh based on the 'Symedge' concept (see Symedge.cs).
-            *All* modifications of the mesh are achieved by the Euler operators originally introduced
-            by Martti Mantyla in 1984. The basic idea of the operators is to allow topological modifications
-            that leave the Euler property of a planar and connected (geometric) graph intact. In such
-            a graph, the formula v − e + f = 2 always holds, where v = #nodes, e = #edges and f = #faces.
-            It basically means that vertices and edges as well as faces and edges have to be inserted or
-            deleted *together*; none of the three elements can be inserted/deleted by themselves.
+             <summary>
+             Class that represents and manages a 2D-mesh based on the 'Symedge' concept (see Symedge.cs).
+             *All* modifications of the mesh are achieved by the Euler operators originally introduced
+             by Martti Mantyla in 1984. The basic idea of the operators is to allow topological modifications
+             that leave the Euler property of a planar and connected (geometric) graph intact. In such
+             a graph, the formula v − e + f = 2 always holds, where v = #nodes, e = #edges and f = #faces.
+             It basically means that vertices and edges as well as faces and edges have to be inserted or
+             deleted *together*; none of the three elements can be inserted/deleted by themselves.
             
-            Both the rotational order of symedges connected to the same vertex and the sequential order
-            of symedges connected to the same Face is counter-clockwise, CCW.
+             Both the rotational order of symedges connected to the same vertex and the sequential order
+             of symedges connected to the same Face is counter-clockwise, CCW.
             
-            An excellent account is found in Sven Havemann, Generative Mesh Modeling (PhD-Dissertation at
-            U.Braunschweig, 2005), p.70
-            </summary>
+             An excellent account is found in Sven Havemann, Generative Mesh Modeling (PhD-Dissertation at
+             U.Braunschweig, 2005), p.70
+             </summary>
         </member>
         <member name="P:VirtualBeings.Tech.ActiveCognition.Mesh.Vertices">
             <summary>
@@ -1175,16 +1227,16 @@
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.Mesh.NotifyMeshAboutEdgeConstraintChanges(VirtualBeings.Tech.ActiveCognition.Edge,System.Boolean,System.Boolean)">
-            <summary>
-            Must be called by user of Mesh if changes to constraints of an edge are to
-            be propagated to the neighboring faces.
+             <summary>
+             Must be called by user of Mesh if changes to constraints of an edge are to
+             be propagated to the neighboring faces.
             
-            TODO: this is currently untested and not functional, this function is therefore
-            not called (as it would have to be) by the DCDT.
-            </summary>
-            <param name="bAdd">true if constraint(s) have been added, false if removed</param>
-            <param name="bMultiple">true if (possibly) more than one constraint was changed</param>
-            <param name="e"></param>
+             TODO: this is currently untested and not functional, this function is therefore
+             not called (as it would have to be) by the DCDT.
+             </summary>
+             <param name="bAdd">true if constraint(s) have been added, false if removed</param>
+             <param name="bMultiple">true if (possibly) more than one constraint was changed</param>
+             <param name="e"></param>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.Mesh.ResetEvents">
             <summary>
@@ -1290,18 +1342,18 @@
             <returns></returns>
         </member>
         <member name="T:VirtualBeings.Tech.ActiveCognition.MeshElement">
-            <summary>
-            Auxilliary classes for the Symedge class as explained in the following article:
-            "Navigation Queries from Triangular Meshes", Marcelo Kallmann, 2010.
+             <summary>
+             Auxilliary classes for the Symedge class as explained in the following article:
+             "Navigation Queries from Triangular Meshes", Marcelo Kallmann, 2010.
             
-            Note that only class Vertex contains geometric information while only Symedge
-            is used to store topological information. Face and Edge are purely administrative
-            classes.
+             Note that only class Vertex contains geometric information while only Symedge
+             is used to store topological information. Face and Edge are purely administrative
+             classes.
             
-            Edge and Vertex can store information about the 'constraints' they belong to.
+             Edge and Vertex can store information about the 'constraints' they belong to.
             
-            MeshElement simply stores info that is common to Vertex, Edge and Face.
-            </summary>
+             MeshElement simply stores info that is common to Vertex, Edge and Face.
+             </summary>
         </member>
         <member name="P:VirtualBeings.Tech.ActiveCognition.MeshElement.ThisNode">
             <summary>
@@ -1406,12 +1458,12 @@
             </summary>
         </member>
         <member name="T:VirtualBeings.Tech.ActiveCognition.Symedge">
-            <summary>
-            The Symedge class as explained in the following excellent article:
-            "Navigation Queries from Triangular Meshes", Marcelo Kallmann, 2010.
+             <summary>
+             The Symedge class as explained in the following excellent article:
+             "Navigation Queries from Triangular Meshes", Marcelo Kallmann, 2010.
             
-            It serves as a basic building block for any kind of 2D mesh.
-            </summary>
+             It serves as a basic building block for any kind of 2D mesh.
+             </summary>
         </member>
         <member name="P:VirtualBeings.Tech.ActiveCognition.Symedge.Nxt">
             <summary>
@@ -1430,23 +1482,23 @@
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.Pathfinder.FindPath_AStar(VirtualBeings.Tech.ActiveCognition.Face,VirtualBeings.Tech.Utils.Vec2,VirtualBeings.Tech.Utils.Vec2,System.Collections.Generic.List{VirtualBeings.Tech.ActiveCognition.Corner},System.Int32)">
-            <summary>
-            Find a path from Face 'start' to Face 'end', or return null if none exists.
-            This is an implementation of the A* algorithm, based on the explanations and
-            pseudocode at http://en.wikipedia.org/wiki/A*_search_algorithm
+             <summary>
+             Find a path from Face 'start' to Face 'end', or return null if none exists.
+             This is an implementation of the A* algorithm, based on the explanations and
+             pseudocode at http://en.wikipedia.org/wiki/A*_search_algorithm
             
-            NB: A* cannot always find Euclidean shortest paths in a general navmesh, and will frequently return suboptimal paths.
-            Furthermore, its not even faster than RS-BF, as I've determined through various large-scale experiments.
+             NB: A* cannot always find Euclidean shortest paths in a general navmesh, and will frequently return suboptimal paths.
+             Furthermore, its not even faster than RS-BF, as I've determined through various large-scale experiments.
             
-            NB: creates garbage, not for production use.
+             NB: creates garbage, not for production use.
             
-            <param name="AStarMode">0 = centroids, 1 = incenters, 2 = centroids for g-score, point on triangle-border
-            closest to 'vEnd' for h-score</param>
-            <param name="fStart"></param>
-            <param name="vStart"></param>
-            <param name="vEnd"></param>
-            <param name="lResultBuffer"></param>
-            </summary>
+             <param name="AStarMode">0 = centroids, 1 = incenters, 2 = centroids for g-score, point on triangle-border
+             closest to 'vEnd' for h-score</param>
+             <param name="fStart"></param>
+             <param name="vStart"></param>
+             <param name="vEnd"></param>
+             <param name="lResultBuffer"></param>
+             </summary>
         </member>
         <member name="T:VirtualBeings.Tech.ActiveCognition.Pathfinder.DFSNode">
             <summary>
@@ -1513,16 +1565,16 @@
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.Pathfinder.InsertOrUpdatePosition(System.Int32,VirtualBeings.Tech.Utils.Vec2)">
-            <summary>
-            Class Pathfinding can store an arbitrary number of 'position' references, in order to
-            make retrieval of their containing face more efficient. Each position is named with
-            a unique id (supplied by the owner). Actual storage takes place in the Mesh class.
+             <summary>
+             Class Pathfinding can store an arbitrary number of 'position' references, in order to
+             make retrieval of their containing face more efficient. Each position is named with
+             a unique id (supplied by the owner). Actual storage takes place in the Mesh class.
             
-            This function updates an existing position -=OR=- inserts/updates a new position reference.
-            In the former case, it is very fast if the position has not changed (much). Otherwise, its speed
-            depends linearly on the number of faces over which the position
-            has been moved in the navmesh.
-            </summary>
+             This function updates an existing position -=OR=- inserts/updates a new position reference.
+             In the former case, it is very fast if the position has not changed (much). Otherwise, its speed
+             depends linearly on the number of faces over which the position
+             has been moved in the navmesh.
+             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.Pathfinder.RemovePosition(System.Int32)">
             <summary>
@@ -1545,60 +1597,60 @@
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.Pathfinder.GetLengthOfStraightCorridor(System.Int32,VirtualBeings.Tech.Utils.Vec2,VirtualBeings.Tech.Utils.Vec2,System.Double,VirtualBeings.Tech.Utils.Vec2@)">
-            <summary>
-            Calculate the largest rectangular corridor for an agent of width 'width' at position 'currentPosition'
-            in the direction 'desiredDirection' (up to desiredDirection.Magnitude).
+             <summary>
+             Calculate the largest rectangular corridor for an agent of width 'width' at position 'currentPosition'
+             in the direction 'desiredDirection' (up to desiredDirection.Magnitude).
             
-            This function is geometrically correct, meaning that it solves the "departure problem". (However, in the unlikely case
-            that you really need it to solve the departure problem even for the backward half of the agent, you should make
-            sure that 'currentPosition' is at the rear of the agent, not at its center.)
+             This function is geometrically correct, meaning that it solves the "departure problem". (However, in the unlikely case
+             that you really need it to solve the departure problem even for the backward half of the agent, you should make
+             sure that 'currentPosition' is at the rear of the agent, not at its center.)
             
-            NB: This function does not try to be numerically robust, so if the actual corridor has width 'width',
-            the function may decide that it is blocked.
+             NB: This function does not try to be numerically robust, so if the actual corridor has width 'width',
+             the function may decide that it is blocked.
             
-            NB: If the agent is currently intersecting an obstacle at the baseline of the
-            corridor, we return 0.
+             NB: If the agent is currently intersecting an obstacle at the baseline of the
+             corridor, we return 0.
             
-            Algorithm:
+             Algorithm:
             
-            - for the geometric operations below, we use the following names for the six relevant points,
-              where C = currentPosition and D-C = desiredDirection:
+             - for the geometric operations below, we use the following names for the six relevant points,
+               where C = currentPosition and D-C = desiredDirection:
             
-            |--width--|
-            Dl - D - Dr
-                 ^
-                 |
-                 |
-            Cl - C - Cr
+             |--width--|
+             Dl - D - Dr
+                  ^
+                  |
+                  |
+             Cl - C - Cr
             
-            - create a priority queue of Pairs which store a symedge *in* the corridor and the distance of the closest obstacle on it;
-              the priority is the closest point (obstacle or not) relative to the corridor-base ClCr of the intersection symedge/corridor
-            - create a set of edges to keep track of which edges have already been processed
-            - calculate start-face
-            - put (looking from startface) all Symedge.Sym's into PQ that intersect corridor base ClCr
-            - also put (if it exists) that symedge of the startface in the PQ which crosses
-              (C->D) and isn't yet in the edge-set
-            - loop over PQ: for each dequeued pair, see if it has an obstacle and, if so, if it's the closest so far
-            - check if the two neighboring symedges of the dequeued symedge are in the corridor and calculate their closest
-              obstacle (if any); enqueue them if they cross the corridor (whether or not they have an obstacle)
-            - during the previous step, use the set to ensure that edges are never processed twice
-            - termination criterion: PQ is empty, or an item is dequeued whose priority is greater-or-equal than the
-              distance of the closest obstacle so far (this is important - by the design of the algorithm, we now know that
-              no unprocessed edge can exit that provides a closer obstacle than the currently closest one)
-            </summary>
+             - create a priority queue of Pairs which store a symedge *in* the corridor and the distance of the closest obstacle on it;
+               the priority is the closest point (obstacle or not) relative to the corridor-base ClCr of the intersection symedge/corridor
+             - create a set of edges to keep track of which edges have already been processed
+             - calculate start-face
+             - put (looking from startface) all Symedge.Sym's into PQ that intersect corridor base ClCr
+             - also put (if it exists) that symedge of the startface in the PQ which crosses
+               (C->D) and isn't yet in the edge-set
+             - loop over PQ: for each dequeued pair, see if it has an obstacle and, if so, if it's the closest so far
+             - check if the two neighboring symedges of the dequeued symedge are in the corridor and calculate their closest
+               obstacle (if any); enqueue them if they cross the corridor (whether or not they have an obstacle)
+             - during the previous step, use the set to ensure that edges are never processed twice
+             - termination criterion: PQ is empty, or an item is dequeued whose priority is greater-or-equal than the
+               distance of the closest obstacle so far (this is important - by the design of the algorithm, we now know that
+               no unprocessed edge can exit that provides a closer obstacle than the currently closest one)
+             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.Pathfinder.GetMaximumTurnRadiusAtUpcomingCorner(System.Int32,System.Double,System.Double,System.Double,VirtualBeings.Tech.Utils.Vec2,VirtualBeings.Tech.ActiveCognition.Corner,VirtualBeings.Tech.Utils.Vec2,VirtualBeings.Tech.Utils.Vec2@)">
-            <summary>
-            Calculate how tightly the upcoming corner has to be circumnavigated. The function returns the maximum turn radius
-            (up to desiredMaxTurnRadius, which should be set as small as possible!) enforced by the worst obstacle in the vicinity
-            around and behind the corner.
+             <summary>
+             Calculate how tightly the upcoming corner has to be circumnavigated. The function returns the maximum turn radius
+             (up to desiredMaxTurnRadius, which should be set as small as possible!) enforced by the worst obstacle in the vicinity
+             around and behind the corner.
             
-            In its current state, the function assumes non-anticipatory steering: the agent moves to the upcoming corner (offset
-            at half his clearance) and only starts turning when he is perpendicular to it.
+             In its current state, the function assumes non-anticipatory steering: the agent moves to the upcoming corner (offset
+             at half his clearance) and only starts turning when he is perpendicular to it.
             
-            turnRadiusExtensionDueToSlowTurnOnset should be set to > 1.0 to account for the fact that the effective turn radius
-            will be worse because the agent begins/ends turning in a continuous manner.
-            </summary>
+             turnRadiusExtensionDueToSlowTurnOnset should be set to > 1.0 to account for the fact that the effective turn radius
+             will be worse because the agent begins/ends turning in a continuous manner.
+             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.Pathfinder.GetClosestObstacle(System.Int32,VirtualBeings.Tech.Utils.Vec2,System.Double,VirtualBeings.Tech.Utils.Vec2@)">
             <summary>
@@ -1623,14 +1675,14 @@
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.Pathfinder.GetClosestObstacle_Internal(System.Int32,VirtualBeings.Tech.Utils.Vec2,System.Double,VirtualBeings.Tech.Utils.Vec2@,System.Boolean,VirtualBeings.Tech.Utils.Vec2,VirtualBeings.Tech.Utils.Vec2)">
-            <summary>
-            GetClosestObstacle() and GetClosestObstacleInSector() use the same overall algorithm and are therefore
-            implemented via this single function; only the subroutine for finding the closest obstacle on a segment is different.
+             <summary>
+             GetClosestObstacle() and GetClosestObstacleInSector() use the same overall algorithm and are therefore
+             implemented via this single function; only the subroutine for finding the closest obstacle on a segment is different.
             
-            Note that the circle sector defined by sectorLeftSide, sectorRightSide must less than Pi.
+             Note that the circle sector defined by sectorLeftSide, sectorRightSide must less than Pi.
             
-            Return value: distance of the closest obstacle, or maxDistance.
-            </summary>
+             Return value: distance of the closest obstacle, or maxDistance.
+             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.Pathfinder.GetClosestPointsOnSegment(VirtualBeings.Tech.ActiveCognition.Symedge,VirtualBeings.Tech.Utils.Vec2,System.Double@,System.Double@,VirtualBeings.Tech.Utils.Vec2@)">
             <summary>
@@ -1655,17 +1707,17 @@
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.Pathfinder.GetOptimalTargetInCorridorBasedOnSymedge(VirtualBeings.Tech.ActiveCognition.Symedge,VirtualBeings.Tech.Utils.Vec2,VirtualBeings.Tech.Utils.Vec2,VirtualBeings.Tech.Utils.Vec2,VirtualBeings.Tech.Utils.Vec2,VirtualBeings.Tech.Utils.Vec2,VirtualBeings.Tech.Utils.Vec2,VirtualBeings.Tech.Utils.Vec2,VirtualBeings.Tech.Utils.Vec2,System.Double,System.Double@,VirtualBeings.Tech.Utils.Vec2@,System.Int32@)">
-            <summary>
-            Very specialized function used by FindFreeCorridorAlongPath().
-            Calculates the distance of the closest point that lies on the intersection
-            of a segment with a corridor. Also, calculates the closest constrained
-            point (if it exists) vis-a-vis the line mA-mB.
-            If one or both points don't exist, distances are set to MaxValue.
+             <summary>
+             Very specialized function used by FindFreeCorridorAlongPath().
+             Calculates the distance of the closest point that lies on the intersection
+             of a segment with a corridor. Also, calculates the closest constrained
+             point (if it exists) vis-a-vis the line mA-mB.
+             If one or both points don't exist, distances are set to MaxValue.
             
-            'sign' refers to optimalTarget and can be: 1=left, -1=right, 0=both
+             'sign' refers to optimalTarget and can be: 1=left, -1=right, 0=both
             
-            Assumes all Vec2 parameters are distinct, except possibly C==mA and D==mB!
-            </summary>
+             Assumes all Vec2 parameters are distinct, except possibly C==mA and D==mB!
+             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.Pathfinder.Raycast(VirtualBeings.Tech.Utils.Vec2,VirtualBeings.Tech.Utils.Vec2,System.Int32)">
             <summary>
@@ -1795,17 +1847,17 @@
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.Pathfinder.FindPath_RSBF_Internal(VirtualBeings.Tech.ActiveCognition.Face,VirtualBeings.Tech.Utils.Vec2,VirtualBeings.Tech.Utils.Vec2,System.Collections.Generic.List{VirtualBeings.Tech.ActiveCognition.Corner},System.Double,System.Double,VirtualBeings.Tech.ActiveCognition.Symedge@,VirtualBeings.Tech.ActiveCognition.PathInspector)">
-            <summary>
-            Find a path from Face 'start' to Face 'end' with minimum clearance 'clearance'.
-            This is an implementation of RS-BF. See my unpublished manuscripts.
+             <summary>
+             Find a path from Face 'start' to Face 'end' with minimum clearance 'clearance'.
+             This is an implementation of RS-BF. See my unpublished manuscripts.
             
-            This augmented version from 2015 also returns, via 'blockingSymedge', the first symedge (or null) that creates
-            a block in the path for an agent with clearance 'blockingClearance' (where blockingClearance obviously should be higher than clearance).
-            This is used in pathfinding to allow switching between different locomotion types. E.g., path-search can focus on the most
-            clearance-efficient locomotion type (e.g., walk), and the blocking symedge warns the user when this locomotion type has to be used.
+             This augmented version from 2015 also returns, via 'blockingSymedge', the first symedge (or null) that creates
+             a block in the path for an agent with clearance 'blockingClearance' (where blockingClearance obviously should be higher than clearance).
+             This is used in pathfinding to allow switching between different locomotion types. E.g., path-search can focus on the most
+             clearance-efficient locomotion type (e.g., walk), and the blocking symedge warns the user when this locomotion type has to be used.
             
-            This augmented version from 2017 uses a PathInspector to find incomplete-but-desirable paths of almost any type.
-            </summary>
+             This augmented version from 2017 uses a PathInspector to find incomplete-but-desirable paths of almost any type.
+             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.Pathfinder.CenterOfAgentMustCrossLastSymedgeToReachVEnd(VirtualBeings.Tech.ActiveCognition.Pathfinder.PathNode,VirtualBeings.Tech.Utils.Vec2,System.Double)">
             <summary>
@@ -2093,33 +2145,28 @@
             a new target
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Humanoids.LookAround.#ctor(VirtualBeings.Tech.BehaviorComposition.IActivity,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Nullable{UnityEngine.Vector3},System.Nullable{VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper})">
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Humanoids.LookAround.SynchronizedBlinking">
+            <summary>
+            When starting long range head motions, trigger a blinking
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Humanoids.LookAround.TerminationRequested">
+            <summary>
+            Implements ITerminatable
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Humanoids.LookAround.#ctor(VirtualBeings.Tech.BehaviorComposition.IActivity,VirtualBeings.Tech.BehaviorComposition.LookSpeediness,System.Single,System.Single,System.Single,System.Func{UnityEngine.Vector3},System.Boolean,System.Nullable{VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper})">
             <summary>
             </summary>
             <param name="parent"></param>
+            <param name="lookSpeediness">The overall speediness of the look</param>
             <param name="minPitch">The minimum allowed pitch (negative pitch means looking up)</param>
             <param name="maxPitch">The maximum allowed pitch</param>
             <param name="maxYaw">The maximum allowed yaw</param>
-            <param name="firstPhaseDuration">
-            The duration of the first phase
-            (looking at a direction, with a slight head offset and randomized eyes movements)
+            <param name="mainDirectionProvider">The direction around which the look around will operate.
+            If not set, this will be Being.Forward.
             </param>
-            <param name="firstPhaseDurationVariation">
-            How much variation for duration is allowed. Must be at least 1.
-            1 means no variation, 2 (e.g.) means duration can range from duration / 2 to duration * 2.
-            1.25 is usually a good value.
-            </param>
-            <param name="secondPhaseDuration">The duration of the second phase (moving to a a new target)</param>
-            <param name="secondPhaseDurationVariation">
-            How much variation for duration is allowed. Must be at least 1.
-            1 means no variation, 2 (e.g.) means duration can range from duration / 2 to duration * 2.
-            1.25 is usually a good value.
-            </param>
-            <param name="headFollowingMinDelay">Minimum time we should wait before starting moving the head after picking
-            a new target</param>
-            <param name="headFollowingMaxDelay">Maximum time we should wait before starting moving the head after picking
-            a new target</param>
-            <param name="initialTarget">An eventual first target. Will look straight if not set.</param>
+            <param name="synchronizedBlink">Trigger a blink when doing long range motions</param>
             <param name="expression"></param>
         </member>
         <member name="M:VirtualBeings.Tech.BehaviorComposition.VoiceDomainActuator.Initialize">
@@ -2193,6 +2240,74 @@
             Above what value of catchUpUrgency01 do we start to catch up on animated head position?
             </summary>
         </member>
+        <member name="T:VirtualBeings.Tech.BehaviorComposition.CommunicateBehavior">
+            <summary>
+            TODO: to ensure that ongoing chat is terminated when the last CommunicateBehavior exits,
+            this behavior should probably added to the 'default' behaviors launched by the Mind
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.CommunicateBehavior.AllowChat">
+            <summary>
+            Allow chat using AI such as ChatGPT?
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.CommunicateBehavior.UtterancePriorityCalculator(VirtualBeings.Tech.UnityIntegration.IAgent,System.String)">
+             <summary>
+             Calculate the probability that <paramref name="agent"/> is directing <paramref name="utterance"/> at us.
+            
+             NB: this is only called if we were the most recent behavior to register as a responder inside
+             Communicator.RegisterUtteranceResponder().
+            
+             TODO in the future, also do analysis of the <paramref name="utterance"/> to determine if
+             it is us that is being talked to.
+             </summary>
+             <returns>A probability 0..1</returns>
+        </member>
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.CommunicateBehavior.UtteranceResponder(VirtualBeings.Tech.UnityIntegration.IAgent,System.String)">
+             <summary>
+             This is called by whoever raised WorldEvent_Utterance, *if* 1) we were the most recent behavior to register
+             in the Communicator and 2) our priority was the highest compared to all other beings that were asked if they wanted to respond.
+            
+             This method prepares a prompt for the AI to respond to, and then calls CreateChatCompletion() to get the AI to respond.
+             </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.CommunicateBehavior.OnChatCompleted(VirtualBeings.ActiveCognition.Communication.ChatMessage)">
+            <summary>
+            A chat message has been completed by the AI.
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.ICommunicationClient.IsSpeaking">
+            <summary>
+            Returns true if we're preparing to speak or are already speaking.
+            Preparing to speak means that we've sent a request to Text-to-speech system.
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.ICommunicationClient.IsSpeechReady">
+            <summary>
+            Returns true when the required speed has been processed and ready to be played.
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.ICommunicationClient.SpeechDuration">
+            <summary>
+            Returns the duration of the upcoming speech.
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.ICommunicationClient.TerminateSpeech">
+            <summary>
+            Terminate any ongoing chat request, speech request and actual speech.
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.ICommunicationClient.CreateChatCompletion(System.Collections.Generic.List{VirtualBeings.ActiveCognition.Communication.ChatMessage},System.Action{VirtualBeings.ActiveCognition.Communication.ChatMessage})">
+            <summary>
+            Ask an AI model such as ChatGPT to generate a response to a list of messages.
+            The request is asynchronous using UnityWebRequest, and the response gets delivered via the onChatComplete callback.
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.ICommunicationClient.TerminateChatCompletion">
+            <summary>
+            Ensure that any ongoing chat completion request gets terminated.
+            </summary>
+        </member>
         <member name="T:VirtualBeings.Tech.BehaviorComposition.Face">
             <summary>
             The parent activity need to have a Look Service Activity
@@ -2204,12 +2319,12 @@
             </summary>
             <param name="parent"></param>
         </member>
-        <member name="F:VirtualBeings.Tech.BehaviorComposition.LookSpeediness.Sloppiest">
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.LookSpeediness.Slowest">
             <summary>
             Always use the minimal value for the look speed, without taking the current Expression into account
             </summary>
         </member>
-        <member name="F:VirtualBeings.Tech.BehaviorComposition.LookSpeediness.Sloppy">
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.LookSpeediness.Slow">
             <summary>
             Use a speed between the minimal look speed and the one defined by the current Expression
             </summary>
@@ -3352,9 +3467,9 @@
             Specialized helper for Root_ScheduleRStoRSTransition/Root_ScheduleRStoSTTransition that robustly tests if
             the exit time of a transition has been reached
             </summary>
-            <param name="E">Exit time</param>
-            <param name="C">Current time</param>
-            <param name="L">Last time</param>
+            <param name="exitTime">Exit time</param>
+            <param name="currentTime">Current time</param>
+            <param name="lastTime">Last time</param>
             <returns></returns>
         </member>
         <member name="M:VirtualBeings.Tech.BehaviorComposition.RootDomainActuator.SetOrTransitionStateTransitionParameters(System.Single)">
@@ -3489,7 +3604,6 @@
             <param name="beingSettings"></param>
             <param name="beingSharedSettings"></param>
             <param name="terrainSettings"></param>
-            <param name="emitter"></param>
             <param name="characterType"></param>
         </member>
         <member name="M:VirtualBeings.Tech.BehaviorComposition.Being.InitializeBeingSpecific">
@@ -3793,6 +3907,43 @@
             <param name="transitionLeftRight"></param>
             <param name="transitionParameterA"></param>
             <param name="transitionParameterB"></param>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Communicate.AllowChat">
+            <summary>
+            Allow chat using AI such as ChatGPT?
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Communicate.IsChatRequested">
+             <summary>
+            
+             </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Communicate.IsChatAvailable">
+             <summary>
+            
+             </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Communicate.IsSpeaking">
+            <summary>
+            True as soon as RequestSpeech() has been called and until the speech is finished.
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Communicate.IsSpeechReady">
+            <summary>
+            Returns true when the required speed has been processed and ready to be played.
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Communicate.SpeechDuration">
+            <summary>
+            Returns the duration of the upcoming speech. Only makes sense if IsSpeechReady is true.
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Communicate.AddUserContext(System.String)">
+            <summary>
+            Provide some punctual context to the communication system, like "you are now in front of the table" or
+            "you are now very hungry".
+            </summary>
+            <param name="context"></param>
         </member>
         <member name="P:VirtualBeings.Tech.BehaviorComposition.Locomotion.Speed">
             <summary>
@@ -4290,6 +4441,11 @@
             If ConcreteType is not yet the current FS, how should it be reached (via which FOT) ?
             </summary>
         </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper.CrossFade">
+            <summary>
+            How fast (0f) or slow (1f) we want to change the expression. Default 0.5f
+            </summary>
+        </member>
         <member name="P:VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper.Intensity01">
             <summary>
             All FS have an intensity from 0 to 1. At 0 they're identical to 'None'.
@@ -4298,6 +4454,16 @@
         <member name="P:VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper.Randomization01">
             <summary>
             Tells behaviors how much to randomize the actual intensity of this state.
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper.LeftRight">
+            <summary>
+            -1 left to 1 Right
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper.TransitionSpeed01">
+            <summary>
+            0.5 by default
             </summary>
         </member>
         <member name="P:VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper.Vivacity">
@@ -4598,14 +4764,14 @@
             </summary>
         </member>
         <member name="T:VirtualBeings.Tech.BehaviorComposition.IActivity">
-            <summary>
-            Here a reminder of why this interface exists: so that specific being-types (birds etc) can provide inheriting interfaces (IBirdActivity etc).
-            This is necessary so that specific Mind-Types (BirdMind etc), which have to inherit from Activity via Mind and thus cannot inherit from
-            more specific activities (BirdActivity etc), can implement these interface and thereby become the controlling activity for the various
-            being-type-specific activities (Blink etc).
+             <summary>
+             Here a reminder of why this interface exists: so that specific being-types (birds etc) can provide inheriting interfaces (IBirdActivity etc).
+             This is necessary so that specific Mind-Types (BirdMind etc), which have to inherit from Activity via Mind and thus cannot inherit from
+             more specific activities (BirdActivity etc), can implement these interface and thereby become the controlling activity for the various
+             being-type-specific activities (Blink etc).
             
-            Do _not_ use this interface directly, use activities of unknown type via Activity instead
-            </summary>
+             Do _not_ use this interface directly, use activities of unknown type via Activity instead
+             </summary>
         </member>
         <member name="T:VirtualBeings.Tech.BehaviorComposition.IProcess">
             <summary>
@@ -5159,6 +5325,27 @@
             <param name="clampMaxValue"></param>
             <returns></returns>
         </member>
+        <member name="T:VirtualBeings.Tech.BehaviorComposition.ITerminatable">
+            <summary>
+            Allow to "cleanly" terminate a process (activity, behavior, etc). The idea is to tell the process it should
+            now terminate (set TerminationRequested to true).
+            From the implementer's perspective, the main idea is to keep watching the TerminationRequested value, and, when
+            set to true by external code, make sure to quickly yet cleanly respond and stop (we want to still be as responsive
+            as possible). Possible examples are within MoveToBehavior (quick response) or Humanoid.LookAround (potentially
+            slow response but that avoids possible bad head motions)
+            From the owner of the process perspective, there are two ways to use a terminatable:
+            - Give it to a Suspender (see SuspendWhile or SuspendUntil) along with the waiting condition.
+              What will then happen is
+                - When the waiting condition becomes true (or false for SuspendUntil), the suspender switches
+                  TerminationRequested to true
+                - It then waits until the Terminatable becomes inactive and exits.
+              So when waiting for the suspender, when it exits you are guaranteed that
+                - Your condition is respected
+                - The terminatable is now inactive
+            - When you want the process to stop, switch TerminationRequested to true then SuspendUntil(() => process.Active).
+              That way, you will be guaranteed that the process is properly and cleanly terminated
+            </summary>
+        </member>
         <member name="P:VirtualBeings.Tech.BehaviorComposition.ITerminatable.TerminatableThisFrame">
             <summary>
             Can the worker be interrupted this frame?
@@ -5574,12 +5761,12 @@
             <returns></returns>
         </member>
         <member name="T:VirtualBeings.Tech.Beings.Bird.AdditiveTailExpressionBirdBase">
-            <summary>
-            Marker ABC known by KuteEngine to ensure type-safe use of AdditiveTailExpressionBird as an ExtensibleEnum by clients of the KuteEngine server
+             <summary>
+             Marker ABC known by KuteEngine to ensure type-safe use of AdditiveTailExpressionBird as an ExtensibleEnum by clients of the KuteEngine server
             
-            PS: superclass ExtensibleEnum(T) keeps track of the 'enum' classes that instantiate this class. This means that it's not possible
-            to further generalize it into a superclass that works for cats, birds and so on.
-            </summary>
+             PS: superclass ExtensibleEnum(T) keeps track of the 'enum' classes that instantiate this class. This means that it's not possible
+             to further generalize it into a superclass that works for cats, birds and so on.
+             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.Beings.Bird.AdditiveTailExpressionBirdBase.VirtualBeings#Tech#BehaviorComposition#IAdditiveTailExpression#FromID_viaInstance(System.Int32)">
             Public non-static interface
@@ -5641,12 +5828,12 @@
             Behaviors
         </member>
         <member name="T:VirtualBeings.Tech.Beings.Bird.FSBirdBase">
-            <summary>
-            Marker ABC known by KuteEngine to ensure type-safe use of FSBird as an ExtensibleEnum by clients of the KuteEngine server.
+             <summary>
+             Marker ABC known by KuteEngine to ensure type-safe use of FSBird as an ExtensibleEnum by clients of the KuteEngine server.
             
-            PS: superclass ExtensibleEnum(T) keeps track of the 'enum' classes that instantiate this class. This means that it's not possible
-            to further generalize it into a superclass that works for cats, birds and so on.
-            </summary>
+             PS: superclass ExtensibleEnum(T) keeps track of the 'enum' classes that instantiate this class. This means that it's not possible
+             to further generalize it into a superclass that works for cats, birds and so on.
+             </summary>
         </member>
         <member name="P:VirtualBeings.Tech.Beings.Bird.FSBirdBase.Vivacity">
             Public non-static interface
@@ -7632,6 +7819,11 @@
             Position to look at (e.g., the head/eyes for agents)
             </summary>
         </member>
+        <member name="P:VirtualBeings.Tech.UnityIntegration.IInteractable.SalientRotation">
+            <summary>
+            Rotation of the transform to look at (e.g., the head/eyes for agents)
+            </summary>
+        </member>
         <member name="P:VirtualBeings.Tech.UnityIntegration.IInteractable.RootPosition">
             <summary>
             Root position of the interactable
@@ -8181,6 +8373,61 @@
             From https://forum.unity.com/threads/get-the-layernumber-from-a-layermask.114553/#post-3021162
             </summary>
             <returns> layer number </returns>
+        </member>
+        <member name="M:VirtualBeings.Tech.UnityIntegration.Misc.Log(System.Object[])">
+            <summary>
+            Wrapper around Debug.Log() that provides timestamp and nicer formatting for numerical values.
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.UnityIntegration.Misc.LogTrue(System.Object[])">
+            <summary>
+            Version that can be used as a parameter to Debug.ASSERT(), which gets stripped out in release builds.
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.UnityIntegration.Misc.LogWarning(System.Object[])">
+            <summary>
+            Wrapper around Debug.Log() that provides timestamp and nicer formatting for numerical values.
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.UnityIntegration.Misc.LogWarningTrue(System.Object[])">
+            <summary>
+            Version that can be used as a parameter to Debug.ASSERT(), which gets stripped out in release builds.
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.UnityIntegration.Misc.LogError(System.Object[])">
+            <summary>
+            Wrapper around Debug.Log() that provides timestamp and nicer formatting for numerical values.
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.UnityIntegration.Misc.LogErrorTrue(System.Object[])">
+            <summary>
+            Version that can be used as a parameter to Debug.ASSERT(), which gets stripped out in release builds.
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.UnityIntegration.Misc.Log(System.Int32,System.Object[])">
+            <summary>
+            Wrapper around Debug.Log() that provides timestamp and nicer formatting for numerical values.
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.UnityIntegration.Misc.LogTrue(System.Int32,System.Object[])">
+            <summary>
+            Version that can be used as a parameter to Debug.ASSERT(), which gets stripped out in release builds.
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.UnityIntegration.Misc.LogError(System.Int32,System.Object[])">
+            <summary>
+            Wrapper around Debug.Log() that provides timestamp and nicer formatting for numerical values.
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.UnityIntegration.Misc.LogErrorTrue(System.Int32,System.Object[])">
+            <summary>
+            Version that can be used as a parameter to Debug.ASSERT(), which gets stripped out in release builds.
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.UnityIntegration.Misc.LogInternal(System.Int32,System.Object[])">
+            <summary>
+            Wrapper around Debug.Log() that provides timestamp and nicer formatting for numerical values.
+            </summary>
         </member>
         <member name="M:VirtualBeings.Tech.UnityIntegration.Misc.DrawDebugPoint(UnityEngine.Vector3,System.Single,UnityEngine.Color,System.Single,System.Single)">
             <summary>
