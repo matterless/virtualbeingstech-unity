@@ -37,31 +37,19 @@ namespace VirtualBeings.Tech.Shared
 
         private void OnEnable()
         {
-            _terrain = _navigableTerrainManager.FindOwningNavigableTerrain(transform.position, 0f);
             _colliders = GetComponentsInChildren<Collider>(false);
-
-            if(_terrain == null)
-            {
-                Misc.LogWarning($"{this} could not find a NavigableTerrain to register to. This obstacle need to be inside one !");
-                return;
-            }
 
             foreach (Collider c in _colliders)
             {
                 switch(ObstacleType)
                 {
                     case ObstacleType.Dynamic:
-                        _terrain.RegisterGameObjectAsObstacle(c.gameObject,
+                        _navigableTerrainManager.RegisterGameObjectAsObstacle(c.gameObject,
                             _overrideRefreshPeriod > 0f ? _overrideRefreshPeriod : _navigableTerrainManager.DynamicAIObstacleRefreshPeriod);
                         break;
 
                     case ObstacleType.Static:
-                        _terrain.RegisterGameObjectAsObstacle(c.gameObject);
-                        break;
-
-                    default:
-                    case ObstacleType.None:
-                        Debug.LogWarning(this + " as NavigableObstacle has its obstacle type set to None. It will not be registered as an obstacle.");
+                        _navigableTerrainManager.RegisterGameObjectAsObstacle(c.gameObject);
                         break;
                 }
             }
@@ -69,17 +57,11 @@ namespace VirtualBeings.Tech.Shared
 
         private void OnDisable()
         {
-            if(_terrain == null)
-            {
-                return;
-            }
-
             foreach (Collider c in _colliders)
-                _terrain.UnregisterGameObjectAsObstacle(c.gameObject);
+                _navigableTerrainManager.UnregisterGameObjectAsObstacle(c.gameObject);
         }
 
         private NavigableTerrainManager _navigableTerrainManager;
-        private INavigableTerrain _terrain;
         private Collider[] _colliders;
     }
 }

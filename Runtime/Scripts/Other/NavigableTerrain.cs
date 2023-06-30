@@ -20,7 +20,7 @@ namespace VirtualBeings.Tech.Shared
     /// since Being and Interactable need these terrain when they awake (so they are executed after the terrain)
     /// </summary>
     [DefaultExecutionOrder(-500)]
-    public class NavigableTerrain : MonoBehaviour, IInteractable, INavigableTerrain
+    public class NavigableTerrain : MonoBehaviour, INavigableTerrain
     {
         /// <summary>
         ///
@@ -53,7 +53,6 @@ namespace VirtualBeings.Tech.Shared
             Collider collider,
             float? floorHeight = null,
             float margin = 0.1f,
-            float refreshRate = -1f,
             bool localSpaceNavigation = false,
             Transform parent = null,
             string name = "",
@@ -88,10 +87,9 @@ namespace VirtualBeings.Tech.Shared
 
             NavigableTerrain navTerrain = navGameObject.AddComponent<NavigableTerrain>();
 
-            navTerrain._margin         = Mathf.Max(margin, 0f);
-            navTerrain._navigationAreaRefreshRate    = refreshRate;
-            navTerrain._enableDebugView = enableMeshDebugging;
-            navTerrain.NavigationIsInLocalSpace     = localSpaceNavigation;
+            navTerrain._enableDebugView         = enableMeshDebugging;
+            navTerrain._maxSize                 = Mathf.Max(margin, 0f);
+            navTerrain.NavigationIsInLocalSpace = localSpaceNavigation;
 
             navTerrain.SetNavigableCollider(collider);
 
@@ -104,89 +102,38 @@ namespace VirtualBeings.Tech.Shared
         [FormerlySerializedAs("BoundingBoxForNavServer"), SerializeField]
         private Collider NavigableCollider;
 
-        private Bounds _bounds
-        {
-            get
-            {
-                if (NavigableCollider != null)
-                    return NavigableCollider.bounds;
-                else
-                    return new Bounds();
-            }
-        }
-
-        [SerializeField, Tooltip("The rate at which the main navigation collider should be refreshed. A negative value means static. In seconds")]
-        private float _navigationAreaRefreshRate = -1f;
+        private Bounds Bounds => NavigableCollider != null ? NavigableCollider.bounds : new Bounds();
 
         [SerializeField]
         private bool NavigationIsInLocalSpace;
 
-        [SerializeField, Min(0f), Tooltip("Marge (in meter) around the navigable terrain limit to grow. Used as a safety measure.")]
-        private float _margin = 1f;
+        [SerializeField, Min(0f),
+         Tooltip(
+             "Maximum size (in meter) the navigable terrain should be able to grow. Note that this is a hard upper limit" +
+             " and it can be arbitrarily large (should be kept in the order of magnitude of the maximum size the collider" +
+             "will ever be able to grow to)"
+         )]
+        private float _maxSize = 1f;
+
+        [SerializeField]
+        private List<GameObject> SpawningPoints;
+
+        [SerializeField]
+        public Settings NavigableTerrainSettings = new();
 
         [SerializeField, Header("Used to visualize navmeshes in the editor")]
         private bool _enableDebugView;
 
         [SerializeField]
-        private List<GameObject> SpawningPoints;
-
-       
-
-        [SerializeField]
-        public Settings NavigableTerrainSettings = new();
-
-        // TODO(Raph): Flight map got removed from Navigable Terrain
-        // [Header("Flight Structure")]
-        // [SerializeField]
-        // private IFlightMap _flightMap; // TODO : better way for integration
-
-        [SerializeField, HideInInspector]
-        private int _interactableID;
-
-        // ------------------------------
-        // IInteractable
-
-        public GameObject TopLevelParent  => gameObject;
-        public bool       IsDestroyed     => gameObject == null;
-        public IAgent     DestroyedBy     { get; private set; }
-        public Quaternion CenterRotation  => transform.rotation;
-        public Vector3    SalientPosition => transform.position;
-        public Quaternion SalientRotation => transform.rotation;
-
-        public bool IsInInteractionDB() => false; // terrains aren't saved to interactionDB
-        public bool HasProperty(InteractableProperty property) => false; // no properties
-        public void Destroy(IAgent _ = null) => Destroy(gameObject);
-        public Set<int>         Properties        { get; } = new Set<int>();
-        public Vector3          RootPosition      => transform.position;
-        public Quaternion       RootRotation      => transform.rotation;
-        public bool             IsLocalizable     => false;
-        public bool             IsLocal           => true; // TODO multiplayer
-        public float            MaxRadius         => _bounds.extents.magnitude;
-        public float            Length            => 0f;
-        public float            Width             => 0f;
-        public float            Height            => 0f;
-        public float            Desirability      => 0f;
-        public float            Repulsiveness     => 0f;
-        public bool             IsDynamic         => false;
-        public bool             IsHandled         => false;
-        public IInteractable    Handler           => null;
-        public bool             IsInPlacementMode => false;
-        public IInteractionMode InteractionMode   => null;
-
-        // the following three are never used as terrains aren't saved to interactionDB
-        public Vector3 Velocity { get; set; }
-        public Vector3 ___PrevPosition { get; set; }
-        public Vector3 CorrectiveDelta { get; set; }
-
-        public int InteractableID { get => _interactableID; set => _interactableID = value; }
-
-        public bool SetHandler(IInteractable handler) => false;
-        public void ReleaseHandler(IInteractable handlerToReleaseFrom) { }
-
-        public event Action OnHandlerChanged;
+        private bool _displayWholeNavMesh;
 
         // ------------------------------
         // INavigableTerrain
+
+        public void UpdateCollider(Collider collider)
+        {
+            Container.NavigableTerrainManager.UpdateNavigationCollider(this, collider);
+        }
 
         public Collider  NavigationCollider                 => NavigableCollider;
         public Transform Transform                          => transform;
@@ -204,7 +151,8 @@ namespace VirtualBeings.Tech.Shared
             }
         }
         private ILineSegmentVisualizer _lineSegmentVisualizer;
-        public float                  FloorHeight           => transform.position.y;
+        public  float                  FloorHeight => transform.position.y;
+
         public bool EnableDebugView
         {
             get => _enableDebugView;
@@ -214,35 +162,40 @@ namespace VirtualBeings.Tech.Shared
                 Container?.NavigableTerrainManager?.SetDebugView(this, value);
             }
         }
+
+        public bool DisplayWholeNavMesh
+        {
+            get => _displayWholeNavMesh;
+            set {
+                _displayWholeNavMesh = value;
+                Container?.NavigableTerrainManager?.DisplayWholeNavMesh(this, value);
+            }
+        }
+
         public Vector3 CenterPosition
         {
             get
             {
                 if (NavigableCollider != null)
-                    return new Vector3(_bounds.center.x, FloorHeight, _bounds.center.z); // TODO(Raph) : recalculate only if navigableTerrain has moved
+                    return new Vector3(
+                        Bounds.center.x,
+                        FloorHeight,
+                        Bounds.center.z
+                    ); // TODO(Raph) : recalculate only if navigableTerrain has moved
                 else
                     return Vector3.zero;
             }
         }
-        public float Margin => _margin;
-        public float RefreshRate
-        {
-            get => _navigationAreaRefreshRate;
-            set
-            {
-                _navigationAreaRefreshRate = value;
-                Container?.NavigableTerrainManager?.UpdateRefreshRate(this, value);
-            }
-        }
+        public float MaxSize => _maxSize;
 
-        public Vector3 CenterOfPlayerArea => _bounds.center;
-        public float MinRadiusOfPlayerArea => Math.Min(_bounds.extents.x, _bounds.extents.z);
-        public float MaxRadiusOfPlayerArea => Mathf.Sqrt(MMath.Sqr(_bounds.extents.x) + MMath.Sqr(_bounds.extents.z));
+        public Vector3 CenterOfPlayerArea    => Bounds.center;
+        public float   MinRadiusOfPlayerArea => Math.Min(Bounds.extents.x, Bounds.extents.z);
+        public float   MaxRadiusOfPlayerArea => Mathf.Sqrt(MMath.Sqr(Bounds.extents.x) + MMath.Sqr(Bounds.extents.z));
 
         public bool IsInsideBounds(Vector3 position, float yUnderOffset, float yMaxCeiling, float margin = 0)
         {
-            Vector3 min = _bounds.min;
-            Vector3 max = _bounds.max;
+            Vector3 min = Bounds.min;
+            Vector3 max = Bounds.max;
 
             return
                 position.x > min.x + margin &&
@@ -255,16 +208,16 @@ namespace VirtualBeings.Tech.Shared
 
         public float DistToBounds(Vector3 position)
         {
-            return _bounds.Contains(position)
+            return Bounds.Contains(position)
                 ? 0f
-                : (_bounds.ClosestPoint(position) - position).magnitude;
+                : (Bounds.ClosestPoint(position) - position).magnitude;
         }
 
         public Vector3 ClosestPointInsideBounds(Vector3 position, float margin = 0)
         {
             if (margin > 0f)
             {
-                Bounds reducedBoundsOfPlayerArea = new(_bounds.center, _bounds.size);
+                Bounds reducedBoundsOfPlayerArea = new(Bounds.center, Bounds.size);
                 reducedBoundsOfPlayerArea.Expand(-margin); // shrink bounds by margin
 
                 return reducedBoundsOfPlayerArea.Contains(position)
@@ -272,9 +225,9 @@ namespace VirtualBeings.Tech.Shared
                     : reducedBoundsOfPlayerArea.ClosestPoint(position);
             }
 
-            return _bounds.Contains(position)
+            return Bounds.Contains(position)
                 ? position
-                : _bounds.ClosestPoint(position);
+                : Bounds.ClosestPoint(position);
         }
 
         private void OnDestroy()
@@ -287,21 +240,6 @@ namespace VirtualBeings.Tech.Shared
         public IReadOnlyList<GameObject> GetSpawningPositions()
         {
             return SpawningPoints;
-        }
-
-        public void RegisterGameObjectAsObstacle(GameObject go, float updateFrequencyInSeconds = 0f, float borderOffset = 0f)
-        {
-            Container.NavigableTerrainManager.RegisterGameObjectAsObstacle(
-                this,
-                go,
-                updateFrequencyInSeconds,
-                borderOffset
-            );
-        }
-
-        public void UnregisterGameObjectAsObstacle(GameObject go)
-        {
-            Container.NavigableTerrainManager.UnregisterGameObjectAsObstacle(this, go);
         }
 
         [Obsolete("This method is only used for the (early) CaaS demo and will be removed soon")]
@@ -347,8 +285,12 @@ namespace VirtualBeings.Tech.Shared
             return false;
         }
 
-        public IRootParentProvider GetFreeRootParentProvider(Being forBeing, RootParentType rootParentType = RootParentType.Any,
-                                                             IInteractable reference = null, float minDistFromReference = float.MaxValue)
+        public IRootParentProvider GetFreeRootParentProvider(
+            Being forBeing,
+            RootParentType rootParentType = RootParentType.Any,
+            IInteractable reference = null,
+            float minDistFromReference = float.MaxValue
+        )
         {
             bool predicate(IInteractable i)
             {
@@ -363,7 +305,8 @@ namespace VirtualBeings.Tech.Shared
             _interactionDB.FindAll(typeof(IRootParentProvider), predicate, _resultBufferForInteractableSearches);
 
             if (_resultBufferForInteractableSearches.Count > 0)
-                return _resultBufferForInteractableSearches[Rand.Range(0, _resultBufferForInteractableSearches.Count)] as IRootParentProvider;
+                return _resultBufferForInteractableSearches[Rand.Range(0, _resultBufferForInteractableSearches.Count)]
+                    as IRootParentProvider;
 
             return null;
         }
@@ -421,7 +364,7 @@ namespace VirtualBeings.Tech.Shared
 
         private void Init(EventManager worldEvents, InteractionDB interactionDB)
         {
-            _worldEvents = worldEvents;
+            _worldEvents   = worldEvents;
             _interactionDB = interactionDB;
 
             LineSegmentVisualizer = NavigableTerrainSettings.LineSegmentVisualizer == null
@@ -436,8 +379,8 @@ namespace VirtualBeings.Tech.Shared
             //_gameManager.WorldEvents.Raise(new Event_World_RegisterNavigableTerrain(this));
         }
 
-        private EventManager _worldEvents;
-        private InteractionDB _interactionDB;
+        private          EventManager        _worldEvents;
+        private          InteractionDB       _interactionDB;
         private readonly List<IInteractable> _resultBufferForInteractableSearches = new();
 
         [Serializable]
@@ -445,7 +388,7 @@ namespace VirtualBeings.Tech.Shared
         {
             [Header("Navigation server")]
             public float Epsilon = 0.002f;
-            public float TimeInMsPerFrameForNavMeshProcessing = 1f;
+            public float      TimeInMsPerFrameForNavMeshProcessing = 1f;
             public GameObject LineSegmentVisualizer; // unused if null
         }
     }

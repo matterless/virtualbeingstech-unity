@@ -6878,13 +6878,6 @@
             <param name="navTerrain"></param>
             <param name="value"></param>
         </member>
-        <member name="M:VirtualBeings.Tech.UnityIntegration.NavigableTerrainManager.UpdateRefreshRate(VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain,System.Single)">
-            <summary>
-            Update the refresh rate of the mesh associated to the given NavigableTerrain
-            </summary>
-            <param name="navTerrain"></param>
-            <param name="newRefreshRate"></param>
-        </member>
         <member name="T:VirtualBeings.Tech.UnityIntegration.SoundManager">
             <summary>
             Handle the sounds played by the beings
@@ -7100,18 +7093,11 @@
             The transform of the navigable terrain
             </summary>
         </member>
-        <member name="P:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.Margin">
+        <member name="P:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.MaxSize">
             <summary>
             The margin around the collider bounds, defining the navmesh total area. This can be used to allow some
             wiggle room in the case of noisy or moving navigation colliders. If the collider happens to be too big or
             moving outside of that margin
-            </summary>
-        </member>
-        <member name="P:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.RefreshRate">
-            <summary>
-            The main collider refresh rate. Useful in the case of a movable collider, or if the input can vary a bit
-            (e.g. AR Planes).
-            Can be -1 to disable it and save resources in case of a static collider.
             </summary>
         </member>
         <member name="P:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.DefineNavigableTerrainInLocalSpace">
@@ -7141,16 +7127,6 @@
             <summary>
             Optional debug visualizer for the underlying navmesh
             TODO : Separate the data and visual
-            </summary>
-        </member>
-        <member name="M:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.RegisterGameObjectAsObstacle(UnityEngine.GameObject,System.Single,System.Single)">
-            <summary>
-            Call RegisterGameObjectAsObstacle for all navservers
-            </summary>
-        </member>
-        <member name="M:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.UnregisterGameObjectAsObstacle(UnityEngine.GameObject)">
-            <summary>
-            Call UnregisterGameObjectAsObstacle for all navservers
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.IsInsideBounds(UnityEngine.Vector3,System.Single,System.Single,System.Single)">
@@ -7222,6 +7198,13 @@
             
              </summary>
              <returns></returns>
+        </member>
+        <member name="M:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.UpdateCollider(UnityEngine.Collider)">
+            <summary>
+            Update the collider defining the navigable area.
+            This will trigger recalculation of the underlying navigation mesh.
+            </summary>
+            <param name="collider"></param>
         </member>
         <member name="T:VirtualBeings.Tech.UnityIntegration.NamedArrayAttribute">
             <summary>
@@ -7463,7 +7446,20 @@
             the specified duration. Note that it intentionally overshoots the allotted time by one transaction
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.UnityIntegration.NavigationServerSynchronous.ExtractDCDTBoundingBox">
+        <member name="M:VirtualBeings.Tech.UnityIntegration.NavigationServerSynchronous.AddSubdividedPolyline(VirtualBeings.Tech.Utils.PolyLine,VirtualBeings.Tech.Utils.Vec2,VirtualBeings.Tech.Utils.Vec2,System.Int32)">
+            <summary>
+            Add a subvided segment to the given polyline. The segment is defined by start and end points.
+            The end point **IS NOT INCLUDED**
+            e.g. if S is the start point, E the end point and we ask for 4 subdivisions, we'll end-up with the following:
+            S --- I1 --- I2 --- I3 --- (E)
+            S, I1, I2 and I3 are inserted in the polyline, but not E
+            </summary>
+            <param name="polyline"></param>
+            <param name="start"></param>
+            <param name="end"></param>
+            <param name="nSubdivisions"></param>
+        </member>
+        <member name="M:VirtualBeings.Tech.UnityIntegration.NavigationServerSynchronous.BoundsToPolyline(UnityEngine.Bounds,System.Int32)">
             <summary>
             Helper to get the bounding box of the navigable area, as defined by the box collider on our gameObject
             </summary>
@@ -8067,16 +8063,10 @@
             Class to be used by gameObject to become part of interaction system.
             /// </summary>
         </member>
-        <member name="F:VirtualBeings.Tech.UnityIntegration.InteractableController._obstacleType">
-            Fields serialized by Unity
-        </member>
         <member name="M:VirtualBeings.Tech.UnityIntegration.InteractableController.OnEnable">
             <summary>
             Must be called by owning gameObject
             </summary>
-        </member>
-        <member name="P:VirtualBeings.Tech.UnityIntegration.InteractableController.TopLevelParent">
-            IInteractable implementation
         </member>
         <member name="M:VirtualBeings.Tech.UnityIntegration.InteractableController.SetHandler(VirtualBeings.Tech.UnityIntegration.IInteractable)">
             <summary>
