@@ -82,6 +82,17 @@
             Data that is solely used in the context of being spawning.
             Also it is data that never changes and therefore not serialized/deserialized across different game sessions.
         </member>
+        <member name="T:VirtualBeings.Tech.ActiveCognition.Cog">
+            <summary>
+            Cogs are very similar to gears in the way they work. Their difference being on the lifecycle.
+            As opposite to gears, that are always alive and available, cogs are used when requested. They can also be created
+            by the user (gears are just built-in systems)
+            A way to understand the "mindset" difference between gears and cogs, is that gears are "static information" about
+            what the being sees, hears, knows and perceives of its environment. Cogs are more here to "make understanding" of
+            what gears know. e.g. gears see 32 "interactable chess pieces", and the "ChessCog" helps understand that in fact
+            black is completely winning here.
+            </summary>
+        </member>
         <member name="M:VirtualBeings.Tech.ActiveCognition.Cog.Init">
             <summary>
             Override to initialize Cog after static Create has been called. This happens only once during
@@ -3658,11 +3669,6 @@
             Use this property as a *seed* to construct any <see cref="T:VirtualBeings.Tech.BehaviorComposition.ITransitionType"/> from server code
             </summary>
         </member>
-        <member name="P:VirtualBeings.Tech.BehaviorComposition.Being.USTNone">
-            <summary>
-            Use this property as a *seed* to construct any <see cref="T:VirtualBeings.Tech.BehaviorComposition.IUST"/> from server code
-            </summary>
-        </member>
         <member name="P:VirtualBeings.Tech.BehaviorComposition.Being.BodyAttitudeNone">
             <summary>
             Use this property as a *seed* to construct any <see cref="T:VirtualBeings.Tech.BehaviorComposition.IBodyAttitude"/> from server code
@@ -3681,6 +3687,21 @@
         <member name="P:VirtualBeings.Tech.BehaviorComposition.Being.FSTransitionTypeDefault">
             <summary>
             Use this property as a *seed* to construct any <see cref="T:VirtualBeings.Tech.BehaviorComposition.IFTT"/> from server code
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Being.HSNone">
+            <summary>
+            Use this property as a *seed* to construct any <see cref="T:VirtualBeings.Tech.BehaviorComposition.IHS"/> from server code
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Being.HSTNone">
+            <summary>
+            Use this property as a *seed* to construct any <see cref="T:VirtualBeings.Tech.BehaviorComposition.IHST"/> from server code
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Being.HTTDefault">
+            <summary>
+            Use this property as a *seed* to construct any <see cref="T:VirtualBeings.Tech.BehaviorComposition.IHTT"/> from server code
             </summary>
         </member>
         <member name="P:VirtualBeings.Tech.BehaviorComposition.Being.AdditiveEarExpressionNone">
@@ -3728,7 +3749,7 @@
             Method registered in FBX importer, called by Animator
             </summary>
         </member>
-        <member name="P:VirtualBeings.Tech.BehaviorComposition.IBodyActuator.DoArmIK">
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.IBodyActuator.IsQuadruped">
             <summary>
             This is a hack to switch between bipeds like birds and quadrupeds.
             Hopefully this should be removed at some point o/
@@ -3798,6 +3819,11 @@
             <summary>
             The interface needed to be implemented by each Domain Actuator,
             in order for it to be registerable in the Actuator Container.
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.DomainActuator.ActuationDomain">
+            <summary>
+            Should be set only by the actuator container. **Do not override** !!
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.BehaviorComposition.DomainActuator.PreUpdate">
@@ -4003,6 +4029,46 @@
         <member name="M:VirtualBeings.Tech.BehaviorComposition.ServiceActivity.PostUpdate">
             <summary>
             Ticks the Update()s of our Behaviors, then defers to base.PostUpdate()
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.HStoHSMatrixEntry.Next">
+            <summary>
+            Inder of state that must be reached next in order to do the HS-HS transition represented by this entry
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.HStoHSMatrixEntry.I">
+            <summary>
+            Index to array holding HSTransitionInfo for this entry (or -1 if unavailable)
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.HSTransitionInfo.Name">
+            <summary>
+            Name of the transition state (or the target state, for direct crossfades) in the animator controller
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.HSTransitionInfo.Hash">
+            <summary>
+            Hash of the transition state (or the target state, for direct crossfades) in the animator controller
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.HSTransitionInfo.TransitionType">
+            <summary>
+            Generated from IHTTEnum
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.HSTransitionInfo.NextExpressiveVariation">
+            <summary>
+            If >= 0, refers to index of HSTransitionInfo
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.HSTTransitionInfo.Name">
+            <summary>
+            Name of the hand transition state in the animator controller
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.BehaviorComposition.HSTTransitionInfo.Hash">
+            <summary>
+            Hash of the hand transition state in the animator controller
             </summary>
         </member>
         <member name="P:VirtualBeings.Tech.BehaviorComposition.FlyBehavior.Target">
@@ -7095,9 +7161,11 @@
         </member>
         <member name="P:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.MaxSize">
             <summary>
-            The margin around the collider bounds, defining the navmesh total area. This can be used to allow some
-            wiggle room in the case of noisy or moving navigation colliders. If the collider happens to be too big or
-            moving outside of that margin
+            The maximum size of the navigation area for this terrain. This value cannot exceed 1000m at the moment.
+            This value should be set in the order of magnitude of the area the NavigableTerrain will leave in (e.g. if
+            it's in a room, it should be set to something like 10 to 20m).
+            Please choose this value wisely (by keeping it above the maximum size your NavigationCollider can grow but
+            still minimize it) as it cannot be changed at runtime.
             </summary>
         </member>
         <member name="P:VirtualBeings.Tech.UnityIntegration.NavigableTerrain.INavigableTerrain.DefineNavigableTerrainInLocalSpace">
@@ -10068,15 +10136,6 @@
         <member name="T:VirtualBeings.Beings.Floater.Infrastructure.TransitionTypeFloaterBase">
              <summary>
              Marker ABC known by KuteEngine to ensure type-safe use of TransitionTypeFloater as an ExtensibleEnum
-             by clients of the Rascal server
-            
-             PS: superclass ExtensibleEnum(T) keeps track of the 'enum' classes that instantiate this class.
-             This means that it's not possible to further generalize it into a superclass that works for cats, birds and so on.
-             </summary>
-        </member>
-        <member name="T:VirtualBeings.Beings.Humanoid.USTHumanoidBase">
-             <summary>
-             Marker ABC known by KuteEngine to ensure type-safe use of STHumanoid as an ExtensibleEnum
              by clients of the Rascal server
             
              PS: superclass ExtensibleEnum(T) keeps track of the 'enum' classes that instantiate this class.

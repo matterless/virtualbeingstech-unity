@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.Serialization;
 using VirtualBeings.Tech.BehaviorComposition;
@@ -34,7 +35,12 @@ namespace VirtualBeings.Tech.Shared
         /// The height of the floor of the navigable terrain. If not set, the height of the parent transform
         /// will be used as the floor height.
         /// </param>
-        /// <param name="margin">The wiggle room area around the collider. Will be clamped to 0 if negative.</param>
+        /// <param name="maxSize">
+        /// The maximum size of the navigation area for this terrain. This value cannot exceed 1000m at the moment.
+        /// This value should be set in the order of magnitude of the area the NavigableTerrain will leave in (e.g. if
+        /// it's in a room, it should be set to something like 10 to 20m).
+        /// Please choose this value wisely (by keeping it above the maximum size your NavigationCollider can grow but
+        /// still minimize it) as it cannot be changed at runtime.</param>
         /// <param name="refreshRate">
         /// The main collider refresh rate. Useful in the case of a movable collider, or if the input can vary a bit
         /// (e.g. AR Planes).
@@ -52,11 +58,12 @@ namespace VirtualBeings.Tech.Shared
         public static NavigableTerrain CreateNavigableTerrain(
             Collider collider,
             float? floorHeight = null,
-            float margin = 0.1f,
+            float maxSize = 1f,
             bool localSpaceNavigation = false,
             Transform parent = null,
             string name = "",
-            bool enableMeshDebugging = false
+            bool enableMeshDebugging = false,
+            bool dumpColliders = false
         )
         {
             if (collider == null)
@@ -88,8 +95,9 @@ namespace VirtualBeings.Tech.Shared
             NavigableTerrain navTerrain = navGameObject.AddComponent<NavigableTerrain>();
 
             navTerrain._enableDebugView         = enableMeshDebugging;
-            navTerrain._maxSize                 = Mathf.Max(margin, 0f);
+            navTerrain._maxSize                 = Mathf.Max(maxSize, 0f);
             navTerrain.NavigationIsInLocalSpace = localSpaceNavigation;
+            navTerrain._dumpColliderUpdates     = dumpColliders;
 
             navTerrain.SetNavigableCollider(collider);
 
@@ -109,9 +117,11 @@ namespace VirtualBeings.Tech.Shared
 
         [SerializeField, Min(0f),
          Tooltip(
-             "Maximum size (in meter) the navigable terrain should be able to grow. Note that this is a hard upper limit" +
-             " and it can be arbitrarily large (should be kept in the order of magnitude of the maximum size the collider" +
-             "will ever be able to grow to)"
+            "The maximum size of the navigation area for this terrain. This value cannot exceed 1000m at the moment. " +
+            "This value should be set in the order of magnitude of the area the NavigableTerrain will leave in " +
+            "(e.g. if it's in a room, it should be set to something like 10 to 20m). " +
+            "Please choose this value wisely (by keeping it above the maximum size your NavigationCollider " +
+            "can grow but still minimize it) as it cannot be changed at runtime."
          )]
         private float _maxSize = 1f;
 
@@ -127,12 +137,22 @@ namespace VirtualBeings.Tech.Shared
         [SerializeField]
         private bool _displayWholeNavMesh;
 
+        [FormerlySerializedAs("_dumpColliders"),SerializeField]
+        private bool _dumpColliderUpdates;
+
         // ------------------------------
         // INavigableTerrain
 
         public void UpdateCollider(Collider collider)
         {
+            if (_dumpColliderUpdates)
+            {
+                DumpCollider(collider);
+            }
+
+            NavigableCollider = collider;
             Container.NavigableTerrainManager.UpdateNavigationCollider(this, collider);
+            CheckColliderLayer(collider);
         }
 
         public Collider  NavigationCollider                 => NavigableCollider;
@@ -170,6 +190,12 @@ namespace VirtualBeings.Tech.Shared
                 _displayWholeNavMesh = value;
                 Container?.NavigableTerrainManager?.DisplayWholeNavMesh(this, value);
             }
+        }
+
+        public bool DumpColliderUpdates
+        {
+            get => _dumpColliderUpdates;
+            set => _dumpColliderUpdates = value;
         }
 
         public Vector3 CenterPosition
@@ -320,6 +346,8 @@ namespace VirtualBeings.Tech.Shared
 
             NavigableCollider = collider;
 
+            CheckColliderLayer(NavigableCollider);
+
             _worldEvents.Raise(new Event_World_RegisterNavigableTerrain(this));
         }
 
@@ -350,6 +378,8 @@ namespace VirtualBeings.Tech.Shared
         {
             if (NavigableCollider != null)
             {
+                CheckColliderLayer(NavigableCollider);
+
                 _worldEvents.Raise(new Event_World_RegisterNavigableTerrain(this));
             }
         }
@@ -372,11 +402,118 @@ namespace VirtualBeings.Tech.Shared
                 : Instantiate(NavigableTerrainSettings.LineSegmentVisualizer, transform)
                    .GetComponent<LineSegmentVisualizer>();
 
+            _meshFile = "";
+
             // Register navServer with the gameManager to make it globally available; unregistering happens in OnDestroy().
             //
             // PS: important that his happens here rather than in OnEnable(), so that obstacles (TableWorldObject etc) can register in OnEnable even
             // when they are created and injected together with this navigable terrain
             //_gameManager.WorldEvents.Raise(new Event_World_RegisterNavigableTerrain(this));
+        }
+
+        private void CheckColliderLayer(Collider collider)
+        {
+            if(collider == null)
+            {
+                Debug.LogWarning($"No NavigableCollider set for {gameObject}");
+                return;
+            }
+
+            LayerMask groundLayerMask = Container.NavigableTerrainManager.NavigableTerrainSettings.LayerMaskGrounding;
+            int colliderLayerMask = 1 << collider.gameObject.layer;
+            bool isColliderInGroundingLayer = (groundLayerMask & colliderLayerMask) != 0;
+
+            if (!isColliderInGroundingLayer)
+            {
+                Debug.LogWarning($"Collider {NavigableCollider.gameObject}'s layer " +
+                                 $"({LayerMask.LayerToName(collider.gameObject.layer)}) is not defined as a " +
+                                 $"'LayerMaskGrounding' in the Being Installer Settings.");
+            }
+        }
+
+        private string _meshFile;
+        private void DumpCollider(Collider collider)
+        {
+            if (_meshFile == "")
+            {
+                string basename = $"ColliderData-{DateTime.Now:yyyyMMdd}";
+                int    cpt      = 1;
+
+                while (true)
+                {
+                    _meshFile = $"{Application.persistentDataPath}/{basename}_{cpt:D3}.mesh";
+                    if (!File.Exists(_meshFile))
+                    {
+                        break;
+                    }
+                    cpt += 1;
+                }
+
+                using FileStream lfs = new(_meshFile, FileMode.Append);
+                using StreamWriter lsw = new(lfs);
+
+                lsw.Write($"{Transform.position};{Transform.rotation};{MaxSize};{DefineNavigableTerrainInLocalSpace};" +
+                          $"{Epsilon};{MaxTimePerFrameForNavigationProcessingInMs};{FloorHeight}\n");
+
+            }
+
+            using FileStream   fs = new(_meshFile, FileMode.Append);
+            using StreamWriter sw = new(fs);
+
+            sw.Write($"{Time.frameCount} {Time.time}:");
+            switch (collider)
+            {
+                case BoxCollider bc:
+                    sw.Write($"BoxCollider:{bc.center}:{bc.size}");
+                    break;
+
+                case SphereCollider sc:
+                    sw.Write($"SphereCollider:{sc.center}:{sc.radius}");
+                    break;
+
+                case MeshCollider mc:
+                {
+                    sw.Write("MeshCollider:");
+                    sw.Write($"{mc.sharedMesh.vertexCount}");
+                    bool first = true;
+                    foreach (Vector3 v in mc.sharedMesh.vertices)
+                    {
+                        if (first)
+                        {
+                            first = false;
+                            sw.Write("#");
+                        }
+                        else
+                        {
+                            sw.Write(";");
+                        }
+                        sw.Write($"{v.ToString()}");
+                    }
+                    sw.Write(":");
+
+                    first = true;
+                    sw.Write($"{mc.sharedMesh.triangles.Length}");
+                    foreach (int i in mc.sharedMesh.triangles)
+                    {
+                        if (first)
+                        {
+                            first = false;
+                            sw.Write("#");
+                        }
+                        else
+                        {
+                            sw.Write(";");
+                        }
+                        sw.Write($"{i}");
+                    }
+                } break;
+
+                default:
+                    sw.Write("InvalidMesh");
+                    break;
+            }
+
+            sw.Write("\n");
         }
 
         private          EventManager        _worldEvents;
