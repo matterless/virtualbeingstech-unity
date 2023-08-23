@@ -3595,6 +3595,11 @@
             Does the current instance has authority over this being ? (Usually yes on Local or Host mode)
             </summary>
         </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.Being.FOVProvider">
+            <summary>
+            FOV of the being
+            </summary>
+        </member>
         <member name="M:VirtualBeings.Tech.BehaviorComposition.Being.GetNearestPointOnSurface(UnityEngine.Vector3)">
             <summary>
             Very inefficient method, uses linear search over all colliders, use sparingly
@@ -3645,7 +3650,6 @@
             Start the lifecycle of the being as in, start the activities and the behavior of the being.
             Must be called ONLY on the device that has authority over it (call it when we are the server/host, but never if we are the client)
             </summary>
-            <param name="executionType"></param>
             <param name="target"></param>
             <exception cref="T:System.Exception"></exception>
         </member>
@@ -3744,7 +3748,7 @@
             Performance schematic dominance arbitration (based on Age, Dominance01 and Neuroticism01)
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.Being.AnimationEventDispatcher(System.String)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.Being.AnimationEventDispatcher(UnityEngine.AnimationEvent)">
             <summary>
             Method registered in FBX importer, called by Animator
             </summary>
@@ -4475,10 +4479,15 @@
             ITransitionType: interface for transitions between RS
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.VocalizationList.GetRandomVocalization(System.Single)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.SoundHelpers.GetRandomSound(System.Collections.Generic.List{VirtualBeings.Tech.UnityIntegration.Sound},System.Single)">
             <summary>
             Returns a random VocalAnimation whose DefaultDuration is 'probably' not
             too far from preferredDuration, though this is not guaranteed.
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.SoundHelpers.IsCloserThan(System.Single,System.Single,System.Single)">
+            <summary>
+            Helpers for binary search
             </summary>
         </member>
         <member name="T:VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper">
@@ -6944,11 +6953,6 @@
             <param name="navTerrain"></param>
             <param name="value"></param>
         </member>
-        <member name="T:VirtualBeings.Tech.UnityIntegration.SoundManager">
-            <summary>
-            Handle the sounds played by the beings
-            </summary>
-        </member>
         <member name="T:VirtualBeings.Tech.UnityIntegration.AutoDecay">
             <summary>
             Encapsulates a float value from 0..X that automatically gets smaller based on exponential decay.
@@ -8204,10 +8208,166 @@
             Which agent satisfied this motive for this being? Can be null. Can also be (main) player.
             </summary>
         </member>
-        <member name="F:VirtualBeings.Tech.UnityIntegration.WorldEvent_SoundRequest.Poignancy01">
+        <member name="T:VirtualBeings.Tech.UnityIntegration.SoundType">
+            <summary>
+            The different type of sounds the beings are capable of understanding.
+            NOTE: This will probably evolve into a more data driven enum (ExtensibleEnum) the future.
+            </summary>
+        </member>
+        <member name="T:VirtualBeings.Tech.UnityIntegration.WorldEvent_BeingSoundRequest">
+            <summary>
+            A sound request event, that got emitted by the procedural animation system, and should be played right away
+            (as opposed to WorldEvent_BeingSoundRequestViaAnimCallback events). A typical example of this would be a cat purring.
+            This event is intended to be caught by the user, within a "sound manager" of some kind. You can get an example
+            of such a sound manager inside VirtualBeingsTech Resources folder.
+             </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.UnityIntegration.WorldEvent_BeingSoundRequest.Being">
+            <summary>
+            The being that emitted the sound event.
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.UnityIntegration.WorldEvent_BeingSoundRequest.Clip">
+            <summary>
+            The audio clip to be played for this sound event.
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.UnityIntegration.WorldEvent_BeingSoundRequest.SoundSource">
+            <summary>
+            Where is the sound coming from. Can typically be used to select the audio source that will play it.
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.UnityIntegration.WorldEvent_BeingSoundRequest.Type">
+            <summary>
+            The type of sound. Can be interpreted within a Cog to provide additional info to the Mind.
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.UnityIntegration.WorldEvent_BeingSoundRequest.Volume01">
+            <summary>
+            The actual volume at which clip should be played
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.UnityIntegration.WorldEvent_BeingSoundRequest.Pitch">
+            <summary>
+            Pitch (speed multiplier) of the clip
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.UnityIntegration.WorldEvent_BeingSoundRequest.Poignancy01">
+            <summary>
             the *emotional* poignancy of the sound (to inform receivers of a SoundEvent), i.e. the
             degree to which it demands attention at or below 'reference distance' (i.e., ignoring AudioSource volume)
             (NB: 'reference distance' is configured in SoundTrackerCogSettings)
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.UnityIntegration.WorldEvent_BeingSoundRequest.Loop">
+            <summary>
+            Does the clip needs to be looped ?
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.UnityIntegration.WorldEvent_BeingSoundRequest.TerminationPredicate">
+            <summary>
+            Predicate used to tell whether a looped sound should be terminated. Can be null.
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.UnityIntegration.WorldEvent_BeingSoundRequest.FadeoutDuration">
+            <summary>
+            Duration of the fadeout when a looped sound terminates.
+            </summary>
+        </member>
+        <member name="T:VirtualBeings.Tech.UnityIntegration.WorldEvent_BeingSoundRequestViaAnimCallback">
+            <summary>
+            A sound request event that is associated with an animation, and that will get triggered from it at some point
+            (when WorldAnimEvent_BeingSoundRequest) gets triggered. This is typically used for sounds associated with facial
+            STs / OTs, etc.
+            This event is intended to be caught by the user, within a "sound manager" of some kind. You can get an example
+            of such a sound manager inside VirtualBeingsTech Resources folder.
+             </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.UnityIntegration.WorldEvent_BeingSoundRequestViaAnimCallback.Being">
+            <summary>
+            The being that emitted the sound event.
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.UnityIntegration.WorldEvent_BeingSoundRequestViaAnimCallback.Clip">
+            <summary>
+            The audio clip to be played for this sound event.
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.UnityIntegration.WorldEvent_BeingSoundRequestViaAnimCallback.SoundSource">
+            <summary>
+            Where is the sound coming from. Can typically be used to select the audio source that will play it.
+            This can be null, and will typically be when we are calling an ST (any domain) or OT (any domain) with no
+            sound data associated. This is currently necessary to inform the sound system that a looping sound
+            (e.g. flapping wings for a flying bird) must now be stopped, because we are not flying anymore).
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.UnityIntegration.WorldEvent_BeingSoundRequestViaAnimCallback.Type">
+            <summary>
+            The type of sound. Can be interpreted within a Cog to provide additional info to the Mind.
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.UnityIntegration.WorldEvent_BeingSoundRequestViaAnimCallback.ValidUntil">
+            <summary>
+            Expiration time for the sound request. If the animation callback gets triggered after that time, just ignore it.
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.UnityIntegration.WorldEvent_BeingSoundRequestViaAnimCallback.Volume01">
+            <summary>
+            The actual volume at which clip should be played
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.UnityIntegration.WorldEvent_BeingSoundRequestViaAnimCallback.Pitch">
+            <summary>
+            Pitch (speed multiplier) of the clip
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.UnityIntegration.WorldEvent_BeingSoundRequestViaAnimCallback.Poignancy01">
+            <summary>
+            the *emotional* poignancy of the sound (to inform receivers of a SoundEvent), i.e. the
+            degree to which it demands attention at or below 'reference distance' (i.e., ignoring AudioSource volume)
+            (NB: 'reference distance' is configured in SoundTrackerCogSettings)
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.UnityIntegration.WorldEvent_BeingSoundRequestViaAnimCallback.Loop">
+            <summary>
+            Does the clip needs to be looped ? When looped, the idea is to play the sound until another request comes for
+            the same source. Basically, this should be used for root states, triggered from an OT (eg a sound when a floater
+            is moving, flapping wings when a bird is flying, etc).
+            </summary>
+        </member>
+        <member name="T:VirtualBeings.Tech.UnityIntegration.WorldAnimEvent_BeingSoundRequest">
+            <summary>
+            Event triggered after receiving an AnimationEventDispatcher animation event with the string "EmitSound"
+            specified (to request emitting a sound).
+            </summary>
+        </member>
+        <member name="T:VirtualBeings.Tech.UnityIntegration.WorldEvent_Sound">
+            <summary>
+            Event that should be triggered externally (see the SoundManager in the Resources from VirtualBeingsTech)
+            to notify the beings that some sound happened. This can be coming from any interactable (e.g. a cube dropping)
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.UnityIntegration.WorldEvent_Sound.Type">
+            <summary>
+            The type of sound associated to the event.
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.UnityIntegration.WorldEvent_Sound.Poignancy01">
+            <summary>
+            the *emotional* poignancy of the sound (to inform receivers of a SoundEvent), i.e. the
+            degree to which it demands attention at or below 'reference distance' (i.e., ignoring AudioSource volume)
+            (NB: 'reference distance' is configured in SoundTrackerCogSettings)
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.UnityIntegration.WorldEvent_Sound.Audible">
+            <summary>
+            The Interactable that emitted the sound. Never null
+            </summary>
+        </member>
+        <member name="F:VirtualBeings.Tech.UnityIntegration.WorldEvent_Sound.Author">
+            <summary>
+            The Agent, if any, that emitted the sound. Can be null.
+            </summary>
         </member>
         <member name="F:VirtualBeings.Tech.UnityIntegration.BoundingFrustum.PlaneCount">
             <summary>
@@ -10102,6 +10262,15 @@
             <summary>
             Threshold angle in degrees that determines when we should start moving the head while looking at a target.
             </summary>
+        </member>
+        <member name="M:VirtualBeings.Beings.Floater.FloaterLocomotion.FloatTo(VirtualBeings.Tech.BehaviorComposition.IRS,VirtualBeings.Tech.BehaviorComposition.IRS,UnityEngine.Vector3)">
+            <summary>
+            Make the Floater Float with the RS floatRS, then land at the goal position with the walkRS as a target RS
+            </summary>
+            <param name="floatRs"></param>
+            <param name="walkRS"></param>
+            <param name="goal"></param>
+            <returns></returns>
         </member>
         <member name="M:VirtualBeings.Beings.Floater.FloatTo.Start(VirtualBeings.Tech.BehaviorComposition.IRS,UnityEngine.Vector3,System.Single,System.Single,System.Single)">
             <summary>
