@@ -5,10 +5,7 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Serialization;
-using VirtualBeings.ActiveCognition.Communication;
 using VirtualBeings.Tech.BehaviorComposition;
 using VirtualBeings.Tech.UnityIntegration;
 
@@ -194,14 +191,6 @@ namespace VirtualBeings.Tech.Resources
         }
 
         public virtual void TerminateSpeech()
-        {
-        }
-
-        public virtual void CreateChatCompletion(List<ChatMessage> messages, Action<ChatMessage> OnComplete)
-        {
-        }
-
-        public virtual void TerminateChatCompletion()
         {
         }
 

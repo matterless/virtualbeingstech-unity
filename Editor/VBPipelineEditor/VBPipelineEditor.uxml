@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements"
+    xmlns:vb="VirtualBeings.UIElements"
+    xsi:noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd"
+>
+
+	<!-- Editor data -->
+	<editor:ObjectField name="EditorDataField" labe="Editor data" />
+
+	<!-- Banner -->
+	<engine:VisualElement name="VBBanner"  class="vb-banner"/>
+
+	<!-- Import Model Step -->
+	<engine:VisualElement name="ImportModelContainer" class="grow-1" />
+
+	<!-- Step buttons -->
+	<engine:VisualElement class="row">
+
+		<engine:Button name="PrevStepBtn" class="grow-1 step-button" text="Previous" />
+		<engine:Button name="NextStepBtn" class="grow-1 step-button" text="Next" />
+		
+	</engine:VisualElement>
+
+</engine:UXML>

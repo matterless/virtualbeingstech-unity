@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements"
+    xmlns:vb="VirtualBeings.UIElements"
+    xsi:noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd"
+>
+
+	<engine:VisualElement name="_root" class="row grow-1">
+		<engine:Label name="_rootName" />
+	</engine:VisualElement>
+	
+	<engine:VisualElement name="_data" class="row grow-1">
+		<editor:ObjectField name="_animationAsset" label="Animation asset" class="grow-1"/>
+	</engine:VisualElement>
+
+
+</engine:UXML>

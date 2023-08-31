@@ -1,0 +1,10 @@
+.vb-banner {
+    flex-grow: 0;
+    height: 150px;
+    background-image: resource("Packages/com.virtualbeings.tech.virtualbeingstech/Editor/Images/logo transparent on dark background.png");
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.step-button {
+    height: 40px;
+}

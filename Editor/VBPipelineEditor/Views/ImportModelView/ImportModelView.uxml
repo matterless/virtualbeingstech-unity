@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements"
+    xmlns:vb="VirtualBeings.UIElements"
+    xsi:noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd"
+>
+	<!-- Input -->
+	<engine:VisualElement class="row align-center p-10">
+
+		<editor:ObjectField name="_modelPicker" label="Pick the model asset" class="grow-1 basis-1" />
+
+		<engine:Label text="OR" class="ml-10 mr-10 text-center" />
+
+		<engine:VisualElement name="_dragNDropZone" class="drag-and-drop-zone drag-neutral grow-1 basis-1 text-center align-center">
+			<engine:Label name="_dragNDropText" text="Drag and Drop your folder/assets here ..." class="grow-1"/>
+		</engine:VisualElement>
+
+	</engine:VisualElement>
+
+	<!-- View -->
+
+	<engine:TwoPaneSplitView fixed-pane-initial-dimension="400">
+
+		<!-- Field -->
+		<engine:VisualElement class="col p-10">
+
+			<engine:Label text="Model Setup" class="title mb-10" />
+			<editor:ObjectField name="_meshModel" label="Current Model"/>
+			<engine:VisualElement name="_beingTypeContainer" />
+			<engine:TreeView name="_animationsTree" class="animations-list" reorderable="true" selection-type="Multiple" />
+
+		</engine:VisualElement>
+
+		<!-- Preview -->
+
+		<engine:VisualElement>
+
+			<vb:MeshViewer name="_meshViewer" class="col preview grow-1"/>
+			<engine:Toggle name="_useEditorMaterialToggle" label="Toggle use editor/FBX material"/>
+			
+			<engine:VisualElement class="row grow-1">
+				<engine:Label name="CurrentFrame" text="Frame 0 / 25" />
+				<engine:Slider name="_animationSlider" class="grow-1"/>
+			</engine:VisualElement>
+		
+		</engine:VisualElement>
+
+	</engine:TwoPaneSplitView>
+
+	<!-- Move or copy Toggle -->
+	<engine:Toggle name="_moveToggle" text="Move instead of Copy"/>
+	<engine:Button name="_apply" text="Move → Reimport" class="apply-button"/>
+
+</engine:UXML>

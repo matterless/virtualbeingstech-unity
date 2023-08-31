@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements"
+    xmlns:vb="VirtualBeings.UIElements"
+    xsi:noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd"
+>
+
+	<!-- Source AnimationController -->
+	<editor:ObjectField name="_sourceControllerField" label="Pick a source AnimatorController" />
+
+	<engine:VisualElement name="_rsSection" class="grow-1">
+
+		<engine:TwoPaneSplitView fixed-pane-initial-dimension="400" >
+			
+			<!-- Available STs -->
+			<engine:VisualElement class="p-10 col">
+
+				<engine:Label text="Available RSs" class="title mb-10" />
+				
+				<engine:ListView name="_availableRSsListView" class="grow-1"/>
+
+			</engine:VisualElement>
+
+			<!-- Associated STs -->
+			<engine:VisualElement class="p-10">
+
+				<engine:Label name="_stTitle" class="title" />
+				
+				<engine:ListView name="_associatedSTsListView" class="grow-1"/>
+				
+			</engine:VisualElement>
+
+		</engine:TwoPaneSplitView>
+
+	</engine:VisualElement>
+
+</engine:UXML>

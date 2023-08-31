@@ -1,0 +1,27 @@
+.tab-button {
+    height: 30px;
+    border-color: darkgrey;
+    padding-left: 10px;
+    padding-right: 10px;
+    border-top-width: 0px;
+    border-left-width: 0px;
+    border-right-width: 0px;
+    border-bottom-width: 2px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    background-color: dimgray;
+}
+
+.header-title {
+    overflow : hidden;
+    text-overflow: ellipsis;
+    -unity-text-overflow-position: end;
+}
+
+.selected {
+    background-color: transparent;
+    border-top-width: 2px;
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-bottom-width: 0px;
+}

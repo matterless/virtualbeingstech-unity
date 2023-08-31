@@ -1,0 +1,4 @@
+.rs-title {
+    -unity-font-style: bold;
+    font-size: 16px;
+}
