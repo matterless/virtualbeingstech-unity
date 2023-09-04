@@ -32,24 +32,30 @@ namespace VirtualBeings.UIElements
             }
         }
 
-        private const string BASE_PATH  = EditorConsts.GLOBAL_EDTOR_BASE_PATH + "/CustomElement/MeshViewer";
-        private const string UXML_PATH  = BASE_PATH + "/" + nameof(MeshViewer) + ".uxml";
-        private const string USS_PATH   = BASE_PATH + "/" + nameof(MeshViewer) + ".uss";
+        private const string BASE_PATH = EditorConsts.GLOBAL_EDTOR_BASE_PATH + "/CustomElement/MeshViewer";
+        private const string UXML_PATH = BASE_PATH + "/" + nameof(MeshViewer) + ".uxml";
+        private const string USS_PATH = BASE_PATH + "/" + nameof(MeshViewer) + ".uss";
 
-        private Label _previewMessage   => this.Q<Label>(nameof(_previewMessage));
-        private Image _previewImage     => this.Q<Image>(nameof(_previewImage));
+        private Label _previewMessage => this.Q<Label>(nameof(_previewMessage));
+        private Image _previewImage => this.Q<Image>(nameof(_previewImage));
 
-        public Mesh             Mesh { get; set; }
-        public List<Material>   MeshMaterials { get; set; }
-        public Material         PreviewMaterial { get; set; }
-        public bool             UsePreviewMaterial { get; set; }
-        public Matrix4x4        ModelMatrix { get; set; }
-        public Vector3          CameraPosition { get; set; }
-        public Quaternion       CameraRotation { get; set; }
+        public Mesh Mesh { get; set; }
+        public List<Material> MeshMaterials { get; set; }
+        public Material PreviewMaterial { get; set; }
+        public bool UsePreviewMaterial { get; set; }
+        public Matrix4x4 ModelMatrix { get; set; }
+        public Vector3 CameraPosition { get; set; }
+
+        public float Yaw;
+        public float Pitch;
+        public Quaternion CameraRotation { get; set; }
 
         private CommandBuffer _previewCmd;
         private RenderTexture _previewTexture;
-        private bool _isDragging;
+
+        private UIInputListener _inputListener;
+
+        private double _lastTimestamp;
 
         public MeshViewer()
         {
@@ -66,6 +72,10 @@ namespace VirtualBeings.UIElements
 
             RegisterCallback<AttachToPanelEvent>(HandleAdded);
             RegisterCallback<DetachFromPanelEvent>(HandleRemoved);
+
+            _lastTimestamp = EditorApplication.timeSinceStartup;
+
+            _inputListener = new UIInputListener(this);
         }
 
         private void HandleRemoved(DetachFromPanelEvent evt)
@@ -75,100 +85,97 @@ namespace VirtualBeings.UIElements
 
             EditorApplication.update -= OnTick;
 
-            UnregisterCallback<MouseMoveEvent>(HandleMove);
-            UnregisterCallback<MouseDownEvent>(HandleDown);
-            UnregisterCallback<MouseUpEvent>(HandleUp);
-            UnregisterCallback<MouseLeaveEvent>(HandleLeave);
-
-            UnregisterCallback<KeyDownEvent>(HandleKeydown);
-            UnregisterCallback<WheelEvent>(HandleScroll);
-
+            _inputListener.Unbind();
         }
+
         private void HandleAdded(AttachToPanelEvent evt)
         {
             EditorApplication.update += OnTick;
 
-            RegisterCallback<MouseMoveEvent>(HandleMove);
-            RegisterCallback<MouseDownEvent>(HandleDown);
-            RegisterCallback<MouseUpEvent>(HandleUp);
-            RegisterCallback<MouseLeaveEvent>(HandleLeave);
-
-            RegisterCallback<KeyDownEvent>(HandleKeydown);
-            RegisterCallback<WheelEvent>(HandleScroll);
-        }
-
-        private void HandleDown(MouseDownEvent evt)
-        {
-            _isDragging = true;
-        }
-
-        private void HandleUp(MouseUpEvent evt)
-        {
-            _isDragging = false;
-        }
-
-        private void HandleLeave(MouseLeaveEvent evt)
-        {
-            _isDragging = false;
-        }
-
-        private void HandleScroll(WheelEvent evt)
-        {
-            Vector3 old = CameraPosition;
-            old .z -= evt.delta.y;
-
-            CameraPosition = old;
-        }
-
-
-        private void HandleKeydown(KeyDownEvent evt)
-        {
-            Vector3 vel = Vector3.zero;
-
-            switch (evt.keyCode)
-            {
-                case KeyCode.Z:
-                    {
-                        vel.y += 1;
-                        break;
-                    }
-                case KeyCode.S:
-                    {
-                        vel.y -= 1;
-                        break;
-                    }
-                case KeyCode.D:
-                    {
-                        vel.x += 1;
-                        break;
-                    }
-                case KeyCode.Q:
-                    {
-                        vel.x -= 1;
-                        break;
-                    }
-            }
-
-            vel = vel.normalized;
-
-            CameraPosition += vel;
-        }
-
-        private void HandleMove(MouseMoveEvent evt)
-        {
-            if (!_isDragging)
-                return;
-
-            CameraRotation *= Quaternion.AngleAxis(evt.mouseDelta.x, Vector2.up);
-            CameraRotation *= Quaternion.AngleAxis(evt.mouseDelta.y, Vector2.right);
+            _inputListener.Bind();
         }
 
         private void OnTick()
         {
-            Render();
+            double delta = EditorApplication.timeSinceStartup - _lastTimestamp;
+
+            Input((float)delta);
+
+            Render((float)delta);
+
+            _lastTimestamp = EditorApplication.timeSinceStartup;
+
+            _inputListener.PostTick();
         }
 
-        private void Render()
+        private void Input(float delta)
+        {
+            UIInputListener.InputState inputState = _inputListener.State;
+
+            // mouse input
+            if (inputState.IsMousePressed)
+            {
+                int rotSpeed = 20;
+
+                Yaw += inputState.MouseDelta.x * rotSpeed * delta;
+                Pitch += inputState.MouseDelta.y * rotSpeed * delta;
+                Pitch = Mathf.Clamp(Pitch, -70, 70);
+
+                Quaternion rotUp = Quaternion.AngleAxis(Yaw, Vector3.up);
+                Quaternion rotRight = rotUp * Quaternion.AngleAxis(Pitch, Vector3.right);
+                Quaternion totalRot = rotUp * (rotUp * rotRight);
+
+                Vector3 euler = totalRot.eulerAngles;
+
+                Quaternion zCancel = Quaternion.AngleAxis(-euler.z, Vector3.forward);
+
+                Quaternion rot = totalRot * zCancel;
+
+                CameraRotation = rot;
+            }
+
+            // keyboard input
+            Vector2 keyboard = Vector2.zero;
+
+            {
+                bool upPressed = inputState.KeyboardInput[(int)KeyCode.Z] == UIInputListener.KeyState.Pressed;
+                bool downPressed = inputState.KeyboardInput[(int)KeyCode.S] == UIInputListener.KeyState.Pressed;
+                bool rightPressed = inputState.KeyboardInput[(int)KeyCode.D] == UIInputListener.KeyState.Pressed;
+                bool leftPressed = inputState.KeyboardInput[(int)KeyCode.Q] == UIInputListener.KeyState.Pressed;
+
+                if (upPressed)
+                {
+                    keyboard.y += 1;
+                }
+
+                if (downPressed)
+                {
+                    keyboard.y -= 1;
+                }
+
+                if (rightPressed)
+                {
+                    keyboard.x += 1;
+                }
+
+                if (leftPressed)
+                {
+                    keyboard.x -= 1;
+                }
+            }
+
+            float strafeSpeed = 2;
+            float scrollSpeed = 2;
+
+            Vector3 vel =
+                (CameraRotation * Vector3.right * (keyboard.x * strafeSpeed)) +
+                (CameraRotation * Vector3.up * (keyboard.y * strafeSpeed)) +
+                (CameraRotation * Vector3.forward * (inputState.ScrollDelta * scrollSpeed));
+
+            CameraPosition += vel * delta;
+        }
+
+        private void Render(float delta)
         {
             if (!_previewImage.IsLayoutBuilt())
             {
@@ -211,17 +218,16 @@ namespace VirtualBeings.UIElements
 
             if (Mesh != null)
             {
+                _previewMessage.text = string.Empty;
                 RenderToTexture(Mesh, _previewCmd, ModelMatrix);
+            }
+            else
+            {
+                _previewMessage.text = "Select a model to preview";
             }
 
             _previewImage.image = _previewTexture;
             _previewImage.MarkDirtyRepaint();
-        }
-
-        public void SetCamera(Vector3 position, Quaternion rotation)
-        {
-            CameraPosition = position;
-            CameraRotation = rotation;
         }
 
         private void RenderToTexture(Mesh mesh, CommandBuffer previewCmd, Matrix4x4 modelMatrix)
@@ -235,23 +241,17 @@ namespace VirtualBeings.UIElements
             Matrix4x4 proj = Matrix4x4.Perspective(fov, aspect, 0.3f, 100f);
             Matrix4x4 projGPU = GL.GetGPUProjectionMatrix(proj, true);
 
-            Debug.Log($"pos : {CameraPosition} , rot : {CameraRotation}");
-
             Matrix4x4 camTransform = Matrix4x4.TRS(CameraPosition, CameraRotation, Vector3.one);
             camTransform = camTransform.inverse;
 
-            Vector3 from = new Vector3(0, 1, -3);
-            Vector3 to = new Vector3(0, 1, 0);
-            Vector3 up = Vector3.up;
-
             Matrix4x4 scaleMatrix = Matrix4x4.Scale(new Vector3(1, 1, -1));
-
-            Matrix4x4 lookMatrix = Matrix4x4.LookAt(from, to, up);
             Matrix4x4 viewMatrix = scaleMatrix * camTransform;
 
             previewCmd.SetViewProjectionMatrices(viewMatrix, projGPU);
-            previewCmd.SetGlobalVector("_WorldSpaceLightPos0", Vector4.one.normalized);
-            previewCmd.SetGlobalVector("_LightColor0", Vector4.one);
+            previewCmd.SetGlobalVector("_LightColor0", new Vector4(2, 1.72f, 1.3f, 2));
+            previewCmd.SetGlobalVector("_LightShadowData", new Vector4(0, 66.66666f, 0.3333333f, -2.6666670f));
+            previewCmd.SetGlobalVector("_WorldSpaceCameraPos", new Vector4( CameraPosition.x , CameraPosition.y , CameraPosition.z , 0));
+            previewCmd.SetGlobalVector("_WorldSpaceLightPos0", new Vector4(0.3213938f, 0.7660444f, -0.5566704f, 0));
 
             if (MeshMaterials == null)
             {

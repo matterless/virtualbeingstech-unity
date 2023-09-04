@@ -14,7 +14,7 @@
 		<engine:Label text="OR" class="ml-10 mr-10 text-center" />
 
 		<engine:VisualElement name="_dragNDropZone" class="drag-and-drop-zone drag-neutral grow-1 basis-1 text-center align-center">
-			<engine:Label name="_dragNDropText" text="Drag and Drop your folder/assets here ..." class="grow-1"/>
+			<engine:Label name="_dragNDropText" text="Drag and Drop your folder/assets here ..." class="grow-1 text-overflow"/>
 		</engine:VisualElement>
 
 	</engine:VisualElement>
@@ -27,6 +27,7 @@
 		<engine:VisualElement class="col p-10">
 
 			<engine:Label text="Model Setup" class="title mb-10" />
+			<editor:ObjectField name="_importAssetField" label="Current import asset"/>
 			<editor:ObjectField name="_meshModel" label="Current Model"/>
 			<engine:VisualElement name="_beingTypeContainer" />
 			<engine:TreeView name="_animationsTree" class="animations-list" reorderable="true" selection-type="Multiple" />
@@ -34,7 +35,6 @@
 		</engine:VisualElement>
 
 		<!-- Preview -->
-
 		<engine:VisualElement>
 
 			<vb:MeshViewer name="_meshViewer" class="col preview grow-1"/>
@@ -50,6 +50,15 @@
 	</engine:TwoPaneSplitView>
 
 	<!-- Move or copy Toggle -->
+
+	<!-- Import settings -->
+	<engine:VisualElement class="col p-10">
+
+		<engine:Label text="Import settings" class="title mb-10" />
+		<engine:FloatField name="_importScaleFactor" label="Scale factor" value="1" />
+
+	</engine:VisualElement>
+
 	<engine:Toggle name="_moveToggle" text="Move instead of Copy"/>
 	<engine:Button name="_apply" text="Move → Reimport" class="apply-button"/>
 

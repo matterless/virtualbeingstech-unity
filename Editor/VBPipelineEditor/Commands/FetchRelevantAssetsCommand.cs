@@ -45,6 +45,7 @@ namespace VirtualBeings
     {
         public List<ModelAssetData> Models;
         public List<AnimationAssetData> Anims;
+        public List<AvatarMask> AvatarMasks;
         public List<string> Errors;
     }
 
@@ -53,8 +54,41 @@ namespace VirtualBeings
     /// </summary>
     public class FetchRelevantAssetsCommand
     {
-        private const string MODEL_SEARCH_FILTER = "t:model";
+        private const string MODEL_SEARCH_FILTER = "t:avatarmask t:model";
         private const string INTERNAL_UNITY_ANIMATION_CLIP = "__preview__Scene";
+
+        private bool IsValidMask(ModelImporter importer, out AnimationAssetData result)
+        {
+            using (ListPool<AnimationClip>.Get(out List<AnimationClip> allAnims))
+            {
+                result = default;
+                string modelPath = importer.assetPath;
+                Object[] allSubAssets = AssetDatabase.LoadAllAssetsAtPath(modelPath);
+
+                Mesh mesh = allSubAssets.OfType<Mesh>().FirstOrDefault();
+
+                allAnims.AddRange(allSubAssets.OfType<AnimationClip>());
+
+                for (int i = allAnims.Count - 1; i >= 0; i--)
+                {
+                    AnimationClip a = allAnims[i];
+
+                    if (a.name == INTERNAL_UNITY_ANIMATION_CLIP)
+                        allAnims.RemoveAt(i);
+                }
+
+                // no model data found
+                if (allAnims.Count == 0)
+                    return false;
+
+                AnimationClip anim = allAnims[0];
+
+                result.AnimationClip = anim;
+                result.AnimAsset = AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
+
+                return true;
+            }
+        }
 
         private bool IsValidAnimation(ModelImporter importer, out AnimationAssetData result)
         {
@@ -153,56 +187,67 @@ namespace VirtualBeings
             output = new FetchRelevantAssetsOutputs();
             output.Anims = new List<AnimationAssetData>();
             output.Models = new List<ModelAssetData>();
+            output.AvatarMasks = new List<AvatarMask>();
             output.Errors = new List<string>();
 
             using (ListPool<string>.Get(out List<string> assetPaths))
             using (ListPool<ModelImporter>.Get(out List<ModelImporter> modelAssets))
+            using (ListPool<AvatarMask>.Get(out List<AvatarMask> masksAssets))
             {
                 // get all the assets inside the paths that reprensent asset paths
                 GetAssetsRecursively(input.ScannablePaths, assetPaths);
 
-                // filter model assets
+                // filter model & avatar mask assets
                 {
                     for (int i = assetPaths.Count - 1; i >= 0; i--)
                     {
                         string assetPath = assetPaths[i];
 
-                        // check is it's a model asset
-                        if (!(AssetImporter.GetAtPath(assetPath) is ModelImporter model))
+                        // check is it's a model or avatar mask asset
+
+                        AvatarMask mask = AssetDatabase.LoadAssetAtPath<AvatarMask>(assetPath);
+                        ModelImporter model = AssetImporter.GetAtPath(assetPath) as ModelImporter;
+
+                        if (model != null)
                         {
-                            assetPaths.RemoveAt(i);
+                            modelAssets.Add(model);
                             continue;
                         }
 
-                        modelAssets.Add(model);
+                        if (mask != null)
+                        {
+                            masksAssets.Add(mask);
+                            continue;
+                        }
+
+                        assetPaths.RemoveAt(i);
                     }
                 }
 
+                // add the avatarMasks
+                output.AvatarMasks.AddRange(masksAssets);
+
+
                 // extract the mesh model
                 {
-                    using (ListPool<Mesh>.Get(out List<Mesh> meshes))
+                    foreach (ModelImporter m in modelAssets)
                     {
-                        foreach (ModelImporter m in modelAssets)
-                        {
-                            if (!IsValidModel(m, out ModelAssetData res))
-                                continue;
+                        if (!IsValidModel(m, out ModelAssetData res))
+                            continue;
 
-                            output.Models.Add(res);
-                        }
+                        output.Models.Add(res);
                     }
                 }
 
                 // extract the animations
                 {
-                    using (ListPool<Mesh>.Get(out List<Mesh> meshes))
-                    {
-                        foreach (ModelImporter m in modelAssets)
-                        {
-                            if (!IsValidAnimation(m, out AnimationAssetData res))
-                                continue;
 
-                            output.Anims.Add(res);
-                        }
+                    foreach (ModelImporter m in modelAssets)
+                    {
+                        if (!IsValidAnimation(m, out AnimationAssetData res))
+                            continue;
+
+                        output.Anims.Add(res);
                     }
                 }
 

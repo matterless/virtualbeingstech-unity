@@ -1,9 +1,10 @@
-﻿// ======================================================================
+// ======================================================================
 // This file contains proprietary technology owned by Virtual Beings SAS.
 // Copyright 2011-2023 Virtual Beings SAS.
 // ======================================================================
 
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using VirtualBeings.Tech.BehaviorComposition;
 using VirtualBeings.Tech.UnityIntegration;
@@ -12,17 +13,17 @@ using VirtualBeings.Tech.Utils;
 namespace VirtualBeings.Tech.Shared
 {
     /// <summary>
-    /// A *circular* part of a navigable terrain that's sufficiently flat and unencumbered by static obstacles
+    /// A part of a navigable terrain where the user define free landing position, for the bird to land to and also
     /// to be walkable by a being. Can however include dynamic obstacles.
     /// </summary>
     [DisallowMultipleComponent]
-    public class WalkableZone : MonoBehaviour, IWalkableZone
+    public class SimpleWalkableZone : MonoBehaviour, IWalkableZone
     {
         // ================================
         // Fields serialized by Unity
 
         [SerializeField]
-        private float _maxWalkableRadius;
+        private List<Transform> _landingSpots;
 
         [SerializeField]
         private Collider _groundCollider;
@@ -68,6 +69,7 @@ namespace VirtualBeings.Tech.Shared
         // IWalkableZone implementation
 
         /// <summary>
+        /// Using all landing spot, do a sphere cast from top to bottom to find a a free spot on the navigable collider without any obstacles
         /// Use spherecasting to find a randomized, free (unobstructed) position where being can be (e.g., by landing).
         /// </summary>
         /// <param name="being">The being that wants to use this position</param>
@@ -78,29 +80,46 @@ namespace VirtualBeings.Tech.Shared
         public bool GetRandomFreePosition(Being being, float freeRadius, out Vector3 position,
             float maxDistFromCenter = float.MaxValue, int nMaxAttempts = 5)
         {
-            float sphereCastDistance = freeRadius * 4f;
+            float sphereOriginUp = freeRadius * 4f;
+            float sphereCastDistance = freeRadius * 10f;
             // TODO(Raph) this will ignore other beings ! Need to fix it for multiple being.
-            LayerMask sphereCastLayerMask = being.SharedSettings.NavObstacleMask /* | Container.Instance.BeingManager.BeingManagerSettings.BeingsLayer */;
-            maxDistFromCenter = Math.Min(maxDistFromCenter, _maxWalkableRadius);
 
-            // first, search once in every direction (radially around root position)
-            for (int i = 0; i < nMaxAttempts; i++)
+            LayerMask obstacleLayer = being.SharedSettings.NavObstacleMask /* | Container.Instance.BeingManager.BeingManagerSettings.BeingsLayer */;
+            LayerMask groundingLayer = Container.Instance.NavigableTerrainManager.NavigableTerrainSettings.LayerMaskGrounding;
+            LayerMask layerToTest = obstacleLayer | groundingLayer;
+
+            Misc.Log(being.SharedSettings.NavObstacleMask.ToString(), Color.red);
+
+            Transform[] tempLandingSpot = new Transform[_landingSpots.Count];
+            _landingSpots.CopyTo(tempLandingSpot);
+
+            for(int i = 0; i < tempLandingSpot.Length; i++)
             {
-                // set 'position' to a random candidate position thats not further than 'maxDistFromCenter - freeRadius'
-                position = transform.position + Vector3.right.RotateAround(Vector3.up, Rand.Range(-180f, 180f)) *
-                    Rand.Range(0f, Math.Max(0f, maxDistFromCenter - freeRadius));
+                // For now test by order (TODO RAPH)
+                position = tempLandingSpot[i].position;
 
                 // spherecast reminder: a cast of maxDistance 1 with radius .5 towards an object with radius .5
                 // will return false from a distance of 2.01, and true from 1.99
-                Vector3 sphereCastOrigin = position + Vector3.up * sphereCastDistance;
+                Vector3 sphereCastOrigin = position + Vector3.up * sphereOriginUp;
 
-                // succeed ...
-                // - if spherecast didnt find anything
-                // - if it found the ground collider associated with this walkable zone
-                if (!Physics.SphereCast(sphereCastOrigin, freeRadius, Vector3.down, out RaycastHit hit,
-                    sphereCastDistance, sphereCastLayerMask) || hit.collider == _groundCollider)
+                if (Physics.SphereCast(sphereCastOrigin, freeRadius, Vector3.down, out RaycastHit hit,
+                    sphereCastDistance, layerToTest))
                 {
+                    if (obstacleLayer == (obstacleLayer | (1 << hit.collider.gameObject.layer)))
+                    {
+                        Misc.Log("Collider touched an OBSTACLE : " + hit.collider.gameObject);
+                        continue;
+                    }
+                    else
+                    {
+                        Misc.Log("Collider touched grounding : " + hit.collider.gameObject);
+                    }
+
                     position.y = hit.point.y;
+                    Misc.DrawDebugPoint(sphereCastOrigin, freeRadius, Color.magenta, 3f);
+                    Debug.DrawLine(sphereCastOrigin, sphereCastOrigin + Vector3.down * sphereCastDistance, Color.yellow, 3f);
+                    Misc.DrawDebugPoint(position, 0.1f, Color.green, 3f);
+
                     return true;
                 }
             }
@@ -132,10 +151,10 @@ namespace VirtualBeings.Tech.Shared
         public bool IsDynamic => false;
         public bool IsHandled => false;
         public bool IsDestroyed => this == null;
-        public float MaxRadius => _maxWalkableRadius;
+        public float MaxRadius => 0f;
         public float Height => 0f;
-        public float Width => _maxWalkableRadius * 2f;
-        public float Length => _maxWalkableRadius * 2f;
+        public float Width => 0f;
+        public float Length => 0f;
         public IInteractable Handler => null;
         public bool IsInPlacementMode => false;
         public IInteractionMode InteractionMode => null;

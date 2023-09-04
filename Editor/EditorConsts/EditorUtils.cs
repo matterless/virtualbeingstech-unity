@@ -3,7 +3,9 @@
 // Copyright 2011-2023 Virtual Beings SAS.
 // ======================================================================
 
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -34,6 +36,43 @@ namespace VirtualBeings.UIElements
                 }
 
                 return _pathToProject;
+            }
+        }
+
+
+        /// <summary>
+        /// <para>Get all parents parent , starting from the first root , to last folder</para>
+        /// <para>Works if the path ends with filename + extension also</para>
+        /// <para>example : for the paths "Assets/Resources/Foo/Bar" or "Assets/Resources/Foo/Bar/SomeAsset.asset"</para>
+        /// <para>The result will be (in that order) :</para>
+        /// <para>"Assets"</para>
+        /// <para>"Assets/Resources"</para>
+        /// <para>"Assets/Resources/Foo"</para>
+        /// <para>"Assets/Resources/Foo/Bar"</para>
+        /// </summary>
+        /// <param name="path"></param>
+        public static void GetParentFoldersFromPath(string path, List<string> parentPaths)
+        {
+            using (ListPool<string>.Get(out List<string> folders))
+            {
+                folders.AddRange(path.Split('/'));
+
+                if (folders.Last().Contains('.'))
+                {
+                    folders.RemoveAt(folders.Count - 1);
+                }
+
+                StringBuilder sb = new StringBuilder();
+                sb.Append(folders[0]);
+                parentPaths.Add(folders[0]);
+
+                for (int i = 1; i < folders.Count; i++)
+                {
+                    sb.Append('/');
+                    sb.Append(folders[i]);
+
+                    parentPaths.Add(sb.ToString());
+                }
             }
         }
 

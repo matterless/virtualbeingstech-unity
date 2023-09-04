@@ -12,4 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4ee6c1239de7b7d4a8065107dac1f996, type: 3}
   m_Name: VBPipelineEditorData
   m_EditorClassIdentifier: 
-  previewMaterial: {fileID: 0}
+  PreviewMaterial: {fileID: 2100000, guid: 272568734d804274bbf593e2484d3f27, type: 2}
+  ModelRotation: {x: 0, y: 0, z: 0}
+  ModelPosition: {x: 0, y: 0, z: 0}
+  CameraRotation: {x: 0, y: 0, z: 0}
+  CameraPosition: {x: 0, y: 0, z: 0}
+  WindowMinSize: {x: 1200, y: 800}

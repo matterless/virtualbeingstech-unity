@@ -13,8 +13,10 @@ namespace VirtualBeings
 
         public Vector3 ModelPosition;
 
-        public Vector3 CameraRotation;
+        public Vector2 CameraRotation;
 
-        public Vector3 CameraPosition;
+        public float CameraZoom;
+
+        public Vector2 WindowMinSize;
     }
 }

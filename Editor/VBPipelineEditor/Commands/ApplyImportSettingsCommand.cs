@@ -6,9 +6,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using UnityEditor;
+
 using UnityEngine;
 using UnityEngine.Assertions;
+
 using VirtualBeings.Tech.BehaviorComposition;
 
 namespace VirtualBeings
@@ -22,6 +25,7 @@ namespace VirtualBeings
         public string ExportPath;
         public GameObject ModelAsset;
         public Dictionary<string, List<GameObject>> AnimationAssets;
+        public float ScaleFactor;
     }
 
     /// <summary>
@@ -41,7 +45,7 @@ namespace VirtualBeings
             Avatar modelAvater = null;
 
             BeingAssetData dataAsset = new BeingAssetData();
-            dataAsset.beingArchetype = input.BeingArchetype;
+            dataAsset.ImportContext.BeingArchetype = input.BeingArchetype;
 
             // model
             {
@@ -52,8 +56,8 @@ namespace VirtualBeings
                 modelAvater = allAssets.OfType<Avatar>().FirstOrDefault();
                 Mesh modelMesh = allAssets.OfType<Mesh>().FirstOrDefault();
 
-                dataAsset.modelAsset = input.ModelAsset;
-                dataAsset.modelMesh = modelMesh;
+                dataAsset.ImportContext.ModelAsset = input.ModelAsset;
+                dataAsset.ImportContext.ModelMesh = modelMesh;
 
                 Assert.IsNotNull(modelAvater);
             }
@@ -65,20 +69,17 @@ namespace VirtualBeings
 
                 // animations
                 {
-                    dataAsset.domainAnimations = new BeingAssetData.DomainAnimationData[input.AnimationAssets.Count];
-
-                    int index = 0;
                     foreach (KeyValuePair<string, List<GameObject>> kv in input.AnimationAssets)
                     {
                         string domainName = kv.Key;
                         List<GameObject> domainAnims = kv.Value;
 
-                        BeingAssetData.DomainAnimationData currDomain = new BeingAssetData.DomainAnimationData();
+                        DomainAnimationData currDomain = new DomainAnimationData();
 
-                        currDomain.domainName = kv.Key;
-                        currDomain.animations = new BeingAssetData.AnimationData[kv.Value.Count];
+                        currDomain.DomainName = kv.Key;
+                        currDomain.Animations = new List<AnimationData>(kv.Value.Count);
 
-                        dataAsset.domainAnimations[index++] = currDomain;
+                        dataAsset.ImportContext.DomainAnimations.Add(currDomain);
 
                         for (int i = 0; i < kv.Value.Count; i++)
                         {
@@ -92,11 +93,13 @@ namespace VirtualBeings
 
                             // model tab
                             {
-                                importer.globalScale = 1;
+                                importer.globalScale = input.ScaleFactor;
                                 importer.useFileUnits = true;
                                 importer.bakeAxisConversion = false;
                                 importer.importBlendShapes = true;
+#if UNITY_2022_1_OR_NEWER
                                 importer.importBlendShapeDeformPercent = false;
+#endif
                                 importer.importVisibility = false;
                                 importer.importCameras = false;
                                 importer.importLights = true;
@@ -162,13 +165,15 @@ namespace VirtualBeings
                                 animClipImporter.keepOriginalPositionXZ = true;
                             }
 
-                            BeingAssetData.AnimationData animData = new BeingAssetData.AnimationData();
-                            animData.animationClip = animClip;
-                            animData.animtionAsset = animAsset;
-                            currDomain.animations[i] = animData;
+                            AnimationData animData = new AnimationData
+                            {
+                                AnimationClip = animClip,
+                                AnimtionAsset = animAsset
+                            };
+
+                            currDomain.Animations.Add(animData);
                             importer.SaveAndReimport();
                         }
-
 
                         string dataAssetPath = $"{input.ExportPath}/Data.asset";
 

@@ -3,7 +3,6 @@
 // Copyright 2011-2023 Virtual Beings SAS.
 // ======================================================================
 
-using Codice.CM.SEIDInfo;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -126,13 +125,17 @@ namespace VirtualBeings
         private void Listen()
         {
             _sourceControllerField.RegisterValueChangedCallback(HandleControllerChanged);
+#if UNITY_2022_1_OR_NEWER
             _availableRSsListView.selectedIndicesChanged += HandleRSSelectedChanged;
-        }
+#endif
+            }
 
         private void Unlisten()
         {
             _sourceControllerField.UnregisterValueChangedCallback(HandleControllerChanged);
+#if UNITY_2022_1_OR_NEWER
             _availableRSsListView.selectedIndicesChanged -= HandleRSSelectedChanged;
+#endif
         }
 
         private void HandleRSSelectedChanged(IEnumerable<int> selectedIndicies)

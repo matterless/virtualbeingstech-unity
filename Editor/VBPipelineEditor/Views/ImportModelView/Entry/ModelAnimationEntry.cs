@@ -42,7 +42,7 @@ namespace VirtualBeings
             {
                 _root.Display(false);
                 _data.Display(true);
-                _animationAsset.value = data._animationClip;
+                _animationAsset.value = data.AnimationClip;
             }
 
             if (treeNode is RootAnimationTreeNode root)

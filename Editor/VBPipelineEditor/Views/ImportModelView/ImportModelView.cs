@@ -6,11 +6,14 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+
 using UnityEditor;
 using UnityEditor.UIElements;
+
 using UnityEngine;
 using UnityEngine.Pool;
 using UnityEngine.UIElements;
+
 using VirtualBeings.Tech.BehaviorComposition;
 using VirtualBeings.UIElements;
 
@@ -31,20 +34,8 @@ namespace VirtualBeings
     /// </summary>
     internal class DataAnimationTreeNode : IAnimationTreeNode
     {
-        internal GameObject _animationAsset;
-        internal AnimationClip _animationClip;
-    }
-
-    /// <summary>
-    /// Data representing the state/info of the <see cref="ImportModelView"/>
-    /// </summary>
-    internal class ImportModelContext
-    {
-        internal GameObject _modelAsset;
-        internal Mesh _modelMesh;
-        internal List<Material> _meshMaterials;
-        internal Matrix4x4 _modelMatrix;
-        internal string _modelName;
+        internal GameObject AnimationAsset;
+        internal AnimationClip AnimationClip;
     }
 
     /// <summary>
@@ -63,6 +54,7 @@ namespace VirtualBeings
         private const string DRAG_NEUTRAL = "drag-neutral";
         private const string DRAG_VALID = "drag-valid";
         private const string DRAG_ERROR = "drag-error";
+        private const string BODY_ATTITUDE_DOMAIN = "BodyAttitude";
 
         private ObjectField _modelPicker => this.Q<ObjectField>(nameof(_modelPicker));
         private VisualElement _dragNDropZone => this.Q<VisualElement>(nameof(_dragNDropZone));
@@ -70,9 +62,13 @@ namespace VirtualBeings
         private MeshViewer _meshViewer => this.Q<MeshViewer>(nameof(_meshViewer));
         private Toggle _useEditorMaterialToggle => this.Q<Toggle>(nameof(_useEditorMaterialToggle));
         private Slider _animationSlider => this.Q<Slider>(nameof(_animationSlider));
+        private ObjectField _importAssetField => this.Q<ObjectField>(nameof(_importAssetField));
         private ObjectField _meshModel => this.Q<ObjectField>(nameof(_meshModel));
         private VisualElement _beingTypeContainer => this.Q<VisualElement>(nameof(_beingTypeContainer));
+#if UNITY_2022_1_OR_NEWER
         private TreeView _animationsTree => this.Q<TreeView>(nameof(_animationsTree));
+#endif
+        private FloatField _importScaleFactor => this.Q<FloatField>(nameof(_importScaleFactor));
         private Toggle _moveToggle => this.Q<Toggle>(nameof(_moveToggle));
         private Button _apply => this.Q<Button>(nameof(_apply));
 
@@ -87,6 +83,22 @@ namespace VirtualBeings
         internal readonly ImportModelContext Context;
 
         public event Action<IPipelineStep> OnStepChanged;
+
+        private static Dictionary<string, BeingAssetData> beingAssets = new Dictionary<string, BeingAssetData>();
+
+        [InitializeOnLoadMethod]
+        public static void CacheBeingAssets()
+        {
+            string[] guids = AssetDatabase.FindAssets($"t:{nameof(BeingAssetData)}");
+
+            // get all BeingAssetData paths
+            foreach (string guid in guids)
+            {
+                string assetPath = AssetDatabase.GUIDToAssetPath(guid);
+                BeingAssetData beingData = AssetDatabase.LoadAssetAtPath<BeingAssetData>(assetPath);
+                beingAssets.Add(assetPath, beingData);
+            }
+        }
 
         public ImportModelView(VBPipelineEditorData data, VBPipelineEditor editor)
         {
@@ -113,14 +125,15 @@ namespace VirtualBeings
             styleSheets.Add(EditorConsts.GlobalStylesheet);
         }
 
+
         private static string BeingArchetypeToString(BeingArchetype being)
         {
             return being.ToString();
         }
-
-        private void RefreshAnimationTree(BeingArchetype beingArchetype)
+#if UNITY_2022_1_OR_NEWER
+        private void RefreshTreeRootDomains()
         {
-            using (ListPool<int>.Get(out var tmp))
+            using (ListPool<int>.Get(out List<int> tmp))
             {
                 tmp.AddRange(_animationsTree.GetRootIds());
 
@@ -130,7 +143,8 @@ namespace VirtualBeings
                 }
             }
 
-            string[] domains = _beingDomains[beingArchetype];
+            string[] domains = _beingDomains[Context.BeingArchetype];
+
             for (int i = 0; i < domains.Length; i++)
             {
                 string domainName = domains[i];
@@ -138,41 +152,76 @@ namespace VirtualBeings
                 _animationsTree.AddItem(new TreeViewItemData<IAnimationTreeNode>(i, rootNode));
             }
         }
+#endif
+        private void ResetDomainAnimations(BeingArchetype beingArchetype)
+        {
+            Context.DomainAnimations.Clear();
+            string[] domains = _beingDomains[beingArchetype];
+
+            for (int i = 0; i < domains.Length; i++)
+            {
+                string domainName = domains[i];
+                Context.DomainAnimations.Add(new DomainAnimationData()
+                {
+                    DomainName = domainName,
+                    Animations = new List<AnimationData>()
+                });
+            }
+        }
 
         private void Initialize()
         {
-            _meshViewer.UsePreviewMaterial = _useEditorMaterialToggle.value;
-
-            BeingArchetype[] beingsValues = (BeingArchetype[])Enum.GetValues(typeof(BeingArchetype));
-            _allBeings = new List<BeingArchetype>(beingsValues);
-
-            _beingDomains = new Dictionary<BeingArchetype, string[]>(beingsValues.Length);
-            foreach (BeingArchetype being in beingsValues)
+            // init animation tree roots
             {
-                _beingDomains.Add(being, Being.GetBeingArchetypeDomains(being));
+                BeingArchetype[] beingsValues = (BeingArchetype[])Enum.GetValues(typeof(BeingArchetype));
+                _allBeings = new List<BeingArchetype>(beingsValues);
+
+                _beingDomains = new Dictionary<BeingArchetype, string[]>(beingsValues.Length);
+                foreach (BeingArchetype being in beingsValues)
+                {
+                    using (ListPool<string>.Get(out List<string> tmp))
+                    {
+                        tmp.AddRange(Being.GetBeingArchetypeDomains(being));
+                        tmp.Insert(0, BODY_ATTITUDE_DOMAIN);
+
+                        _beingDomains.Add(being, tmp.ToArray());
+                    }
+                }
             }
 
             _beingTypePopup = new PopupField<BeingArchetype>("Being type", _allBeings, BeingArchetype.Humanoid, BeingArchetypeToString, BeingArchetypeToString);
             _beingTypeContainer.Add(_beingTypePopup);
 
+#if UNITY_2022_1_OR_NEWER
             _animationsTree.showBorder = true;
             _animationsTree.showAlternatingRowBackgrounds = AlternatingRowBackground.All;
             _animationsTree.virtualizationMethod = CollectionVirtualizationMethod.DynamicHeight;
             _animationsTree.SetRootItems(_animationTreeSource);
+            
+            ResetDomainAnimations(_beingTypePopup.value);
+#endif
+            _meshViewer.UsePreviewMaterial = _useEditorMaterialToggle.value;
 
-            RefreshAnimationTree(_beingTypePopup.value);
 
             _modelPicker.objectType = typeof(UnityEngine.Object);
+
+            _importAssetField.objectType = typeof(BeingAssetData);
+            _importAssetField.SetEnabled(false);
+
             _meshModel.objectType = typeof(Mesh);
+            _meshModel.SetEnabled(false);
         }
 
         private void Listen()
         {
             _apply.clickable.clicked += HandleMoveAssetsBtn;
             _beingTypePopup.RegisterValueChangedCallback(HandleBeingTypeChanged);
+
+#if UNITY_2022_1_OR_NEWER
             _animationsTree.makeItem += HandleMakeItem;
             _animationsTree.bindItem += HandleBindItem;
             _animationsTree.unbindItem += HandleUnbindItem;
+#endif
             _dragNDropZone.RegisterCallback<DragEnterEvent>(HandleDragEnter);
             _dragNDropZone.RegisterCallback<DragLeaveEvent>(HandleDragExit);
             _dragNDropZone.RegisterCallback<DragExitedEvent>(HandleDragDone);
@@ -182,21 +231,20 @@ namespace VirtualBeings
 
         private void Unlisten()
         {
-            _apply.clickable.clicked -= HandleApplyBtn;
+            _apply.clickable.clicked -= HandleMoveAssetsBtn;
             _beingTypePopup.UnregisterValueChangedCallback(HandleBeingTypeChanged);
+
+#if UNITY_2022_1_OR_NEWER
             _animationsTree.makeItem -= HandleMakeItem;
             _animationsTree.bindItem -= HandleBindItem;
             _animationsTree.unbindItem -= HandleUnbindItem;
+#endif
             _dragNDropZone.UnregisterCallback<DragEnterEvent>(HandleDragEnter);
             _dragNDropZone.UnregisterCallback<DragLeaveEvent>(HandleDragExit);
             _dragNDropZone.UnregisterCallback<DragExitedEvent>(HandleDragDone);
             _useEditorMaterialToggle.RegisterValueChangedCallback(HandlePreviewMaterialChanged);
         }
 
-        private void HandleApplyBtn()
-        {
-            throw new NotImplementedException();
-        }
         private void HandlePreviewMaterialChanged(ChangeEvent<bool> evt)
         {
             _meshViewer.UsePreviewMaterial = evt.newValue;
@@ -204,7 +252,9 @@ namespace VirtualBeings
 
         private void HandleBeingTypeChanged(ChangeEvent<BeingArchetype> evt)
         {
-            RefreshAnimationTree(evt.newValue);
+#if UNITY_2022_1_OR_NEWER
+            ResetDomainAnimations(evt.newValue);
+#endif
         }
 
         private bool MoveOrCopyAssets(out MoveAssetsOutputs output)
@@ -213,13 +263,15 @@ namespace VirtualBeings
 
             saveFolder = EditorUtils.AbsoluteToRelativePath(saveFolder);
 
-            string exportFolder = $"{saveFolder}/{Context._modelName}";
+            string exportFolder = $"{saveFolder}/{Context.ModelAsset.name}";
+#if UNITY_2022_1_OR_NEWER
 
             // animations
             using (ListPool<int>.Get(out List<int> rootIDs))
             using (ListPool<int>.Get(out List<int> animIDs))
             using (DictionaryPool<string, List<GameObject>>.Get(out Dictionary<string, List<GameObject>> animsByDomainDict))
             {
+
                 // fetch and prepare all the inputs for the move assets commands
                 rootIDs.AddRange(_animationsTree.GetRootIds());
 
@@ -240,22 +292,29 @@ namespace VirtualBeings
                     foreach (int animID in animIDs)
                     {
                         DataAnimationTreeNode anim = (DataAnimationTreeNode)_animationsTree.GetItemDataForId<IAnimationTreeNode>(animID);
-                        domainAnims.Add(anim._animationAsset);
+                        domainAnims.Add(anim.AnimationAsset);
                     }
                 }
 
                 // execute the move command
                 MoveAssetsInputs input = new MoveAssetsInputs()
                 {
-                    ModelAsset = Context._modelAsset,
+                    ModelAsset = Context.ModelAsset,
                     AnimationAssets = animsByDomainDict,
                     ExportPath = exportFolder,
                     MoveAssets = _moveToggle.value
                 };
 
                 MoveAssetsCommand cmd = new MoveAssetsCommand();
+
                 return cmd.Execute(input, out output);
+
             }
+#else
+            output = default;
+            return false;
+#endif
+
         }
 
         private void HandleMoveAssetsBtn()
@@ -272,13 +331,15 @@ namespace VirtualBeings
                 AnimationAssets = moveOutput.ModelAnimations,
                 BeingArchetype = _beingTypePopup.value,
                 ExportPath = moveOutput.ExportPath,
-                ModelAsset = moveOutput.ModelAsset
+                ModelAsset = moveOutput.ModelAsset,
+                ScaleFactor = _importScaleFactor.value
             };
 
             ApplyImportSettingsCommand cmd = new ApplyImportSettingsCommand();
             cmd.Execute(input, out importOutput);
         }
 
+#if UNITY_2022_1_OR_NEWER
         private void HandleUnbindItem(VisualElement ui, int index)
         {
             ModelAnimationEntry casted = (ModelAnimationEntry)ui;
@@ -287,16 +348,18 @@ namespace VirtualBeings
 
         private void HandleBindItem(VisualElement ui, int index)
         {
+
             ModelAnimationEntry casted = (ModelAnimationEntry)ui;
             IAnimationTreeNode node = (IAnimationTreeNode)_animationsTree.viewController.GetItemForIndex(index);
             casted.Setup(node);
+
         }
 
         private VisualElement HandleMakeItem()
         {
             return new ModelAnimationEntry();
         }
-
+#endif
         private void HandleDragExit(DragLeaveEvent evt)
         {
             _dragNDropZone.RemoveFromClassList(DRAG_VALID);
@@ -312,6 +375,51 @@ namespace VirtualBeings
             _dragNDropZone.AddToClassList(DRAG_NEUTRAL);
             _dragNDropText.text = MESSAGE_NEUTRAL;
 
+            if (DragAndDrop.paths.Length == 1)
+            {
+                string dragPath = DragAndDrop.paths[0];
+
+                HasChildOrParentImportInputs checkInput = new HasChildOrParentImportInputs()
+                {
+                    AssetPath = dragPath,
+                    AllBeingAssetsInProject = beingAssets
+                };
+                HasChildOrParentImportOutputs checkOutput = new HasChildOrParentImportOutputs();
+
+                HasChildOrParentImportCommand checkCmd = new HasChildOrParentImportCommand();
+
+                if (checkCmd.Execute(checkInput, out checkOutput))
+                {
+                    if (checkOutput.AssetImportError == ImportPathError.AssetIsImportFolder)
+                    {
+                        _importAssetField.value = checkOutput.BeingAsset;
+                        LoadAsset(checkOutput.BeingAsset);
+                        ApplyContext(Context);
+                    }
+
+                    return;
+                }
+            }
+
+            FetchAssets();
+            ApplyContext(Context);
+        }
+
+        private void LoadAsset(BeingAssetData asset)
+        {
+            // copy the context data from the import asset
+            Context.ModelAsset = asset.ImportContext.ModelAsset;
+            Context.BeingArchetype = asset.ImportContext.BeingArchetype;
+            Context.ModelMesh = asset.ImportContext.ModelMesh;
+            Context.ModelMaterials.Clear();
+            Context.ModelMaterials.AddRange(asset.ImportContext.ModelMaterials);
+            Context.ModelMatrix = asset.ImportContext.ModelMatrix;
+            Context.DomainAnimations.Clear();
+            Context.DomainAnimations.AddRange(asset.ImportContext.DomainAnimations);
+        }
+
+        private void FetchAssets()
+        {
             FetchRelevantAssetsCommand cmd = new FetchRelevantAssetsCommand();
             FetchRelevantAssetsInputs input = new FetchRelevantAssetsInputs()
             {
@@ -356,25 +464,19 @@ namespace VirtualBeings
                 {
                     ModelAssetData model = output.Models[0];
 
-                    Context._modelAsset = model.ModelAsset;
-                    Context._modelMesh = model.ModelMesh;
-                    Context._modelName = model.ModelAsset.name;
-                    Context._modelMatrix = model.SkinnedMeshRenderer.transform.localToWorldMatrix;
-                    Context._meshMaterials = new List<Material>();
-
-                    model.SkinnedMeshRenderer.GetSharedMaterials(Context._meshMaterials);
-
-                    _meshModel.value = Context._modelMesh;
-
-                    _meshViewer.Mesh = Context._modelMesh;
-                    _meshViewer.ModelMatrix = Context._modelMatrix;
-                    _meshViewer.MeshMaterials = Context._meshMaterials;
-                    _meshViewer.PreviewMaterial = _editorData.PreviewMaterial;
+                    Context.ModelAsset = model.ModelAsset;
+                    Context.ModelMesh = model.ModelMesh;
+                    Context.ModelMatrix = model.SkinnedMeshRenderer.transform.localToWorldMatrix;
+                    Context.ModelMaterials = new List<Material>();
+                    model.SkinnedMeshRenderer.GetSharedMaterials(Context.ModelMaterials);
                 }
             }
 
+            // TODO (Ahmed) : Make this push to the context and not directly to the tree
             // set anims
             {
+                string[] domains = _beingDomains[Context.BeingArchetype];
+
                 foreach (AnimationAssetData anim in output.Anims)
                 {
                     string animName = anim.AnimAsset.name;
@@ -383,19 +485,13 @@ namespace VirtualBeings
 
                     if (split.Length != 2)
                     {
-                        EditorUtility.DisplayDialog("Error", $"The model asset's name {animName} doesn't respect the naming convension <ModelName>@<Domain>_<Action>", "Ok");
+                        // EditorUtility.DisplayDialog("Error", $"The model asset's name {animName} doesn't respect the naming convension <ModelName>@<Domain>_<Action>", "Ok");
                         continue;
                     }
 
-                    DataAnimationTreeNode animModel = new DataAnimationTreeNode()
-                    {
-                        _animationAsset = anim.AnimAsset,
-                        _animationClip = anim.AnimationClip
-                    };
-
                     int domainIndex = -1;
 
-                    string[] domains = _beingDomains[_beingTypePopup.value];
+
 
                     for (int i = 0; i < domains.Length; i++)
                     {
@@ -410,39 +506,140 @@ namespace VirtualBeings
 
                     if (domainIndex == -1)
                     {
-                        EditorUtility.DisplayDialog("Error", $"The animation {anim.AnimationClip.name} doesn't have a prefix that matches one of the existing domains, make sure to name it appropriatly", "Ok");
+                        // EditorUtility.DisplayDialog("Error", $"The animation {anim.AnimationClip.name} doesn't have a prefix that matches one of the existing domains, make sure to name it appropriatly", "Ok");
                         continue;
                     }
 
-                    IAnimationTreeNode item = _animationsTree.GetItemDataForId<IAnimationTreeNode>(anim.GetHashCode());
 
-                    if (item != null)
+                    Context.DomainAnimations[domainIndex].Animations.Add(new AnimationData()
                     {
-                        _editor.ShowNotification(new GUIContent($"The animation {anim.AnimationClip.name} alreayd exists"), 0.5f);
-                        continue;
-                    }
-
-                    int rootId = _animationsTree.GetIdForIndex(domainIndex);
-                    TreeViewItemData<IAnimationTreeNode> itemData = new TreeViewItemData<IAnimationTreeNode>(anim.GetHashCode(), animModel);
-                    _animationsTree.AddItem(itemData, domainIndex);
-                    _animationsTree.ExpandItem(rootId);
-                    _animationsTree.Rebuild();
-                    _animationsTree.RefreshItems();
+                        AnimationClip = anim.AnimationClip,
+                        AnimtionAsset = anim.AnimAsset
+                    });
                 }
             }
+        }
+
+        private void ApplyContext(ImportModelContext Context)
+        {
+            _meshModel.value = Context.ModelMesh;
+            _meshViewer.Mesh = Context.ModelMesh;
+            _meshViewer.ModelMatrix = Context.ModelMatrix;
+            _meshViewer.MeshMaterials = Context.ModelMaterials;
+            _meshViewer.PreviewMaterial = _editorData.PreviewMaterial;
+            _beingTypePopup.value = Context.BeingArchetype;
+#if UNITY_2022_1_OR_NEWER
+            RefreshTreeRootDomains();
+            using (ListPool<string>.Get(out List<string> tmpDomains))
+            {
+                tmpDomains.AddRange(_beingDomains[Context.BeingArchetype]);
+
+                foreach (DomainAnimationData animsPerDomain in Context.DomainAnimations)
+                {
+                    int domainIndex = tmpDomains.IndexOf(animsPerDomain.DomainName);
+
+                    if (domainIndex == -1)
+                    {
+                        Debug.LogError("Couldn't find domain");
+                    }
+
+                    foreach (AnimationData animData in animsPerDomain.Animations)
+                    {
+                        string animName = animData.AnimtionAsset.name;
+
+                        string[] split = animName.Split("@");
+
+                        if (split.Length != 2)
+                        {
+                            EditorUtility.DisplayDialog("Error", $"The model asset's name {animName} doesn't respect the naming convension <ModelName>@<Domain>_<Action>", "Ok");
+                            continue;
+                        }
+
+                        DataAnimationTreeNode animModel = new DataAnimationTreeNode()
+                        {
+                            AnimationAsset = animData.AnimtionAsset,
+                            AnimationClip = animData.AnimationClip
+                        };
+
+                        int id = animModel.AnimationClip.GetHashCode();
+                        IAnimationTreeNode item = _animationsTree.GetItemDataForId<IAnimationTreeNode>(id);
+
+                        if (item != null)
+                        {
+                            _editor.ShowNotification(new GUIContent($"The animation {animData.AnimationClip.name} alreayd exists"), 0.5f);
+                            continue;
+                        }
+
+                        int rootId = _animationsTree.GetIdForIndex(domainIndex);
+                        TreeViewItemData<IAnimationTreeNode> itemData = new TreeViewItemData<IAnimationTreeNode>(id, animModel);
+                        _animationsTree.AddItem(itemData, domainIndex);
+                        _animationsTree.ExpandItem(rootId);
+                        _animationsTree.Rebuild();
+                        _animationsTree.RefreshItems();
+                    }
+                }
+            }
+#endif
         }
 
         private void HandleDragEnter(DragEnterEvent evt)
         {
             _dragNDropZone.RemoveFromClassList(DRAG_NEUTRAL);
 
-            FetchRelevantAssetsCommand cmd = new FetchRelevantAssetsCommand();
+            if (DragAndDrop.paths.Length == 1)
+            {
+                string dragPath = DragAndDrop.paths[0];
+
+                HasChildOrParentImportInputs checkInput = new HasChildOrParentImportInputs()
+                {
+                    AssetPath = dragPath,
+                    AllBeingAssetsInProject = beingAssets
+                };
+                HasChildOrParentImportOutputs checkOutput = new HasChildOrParentImportOutputs();
+
+                HasChildOrParentImportCommand checkCmd = new HasChildOrParentImportCommand();
+
+                if (checkCmd.Execute(checkInput, out checkOutput))
+                {
+                    string importPath = AssetDatabase.GetAssetPath(checkOutput.BeingAsset);
+
+                    switch (checkOutput.AssetImportError)
+                    {
+                        case ImportPathError.AssetAlreadyInsideImport:
+                            {
+                                _dragNDropZone.AddToClassList(DRAG_ERROR);
+                                _dragNDropText.text = $"Can't import an asset that is already inside an import folder , import asset found at {importPath}";
+                                break;
+                            }
+                        case ImportPathError.AssetIsImportFolder:
+                            {
+                                _dragNDropZone.AddToClassList(DRAG_VALID);
+                                _dragNDropText.text = $"Loadable import folder found , import asset found at {importPath}";
+                                break;
+                            }
+                        case ImportPathError.ImportIsInsideAsset:
+                            {
+                                _dragNDropZone.AddToClassList(DRAG_ERROR);
+                                _dragNDropText.text = $"Can't import a folder that indirectly contains the import asset , import asset found at {importPath}";
+                                break;
+                            }
+                    }
+
+                    return;
+                }
+            }
+
+
             FetchRelevantAssetsInputs input = new FetchRelevantAssetsInputs()
             {
                 ScannablePaths = new List<string>(DragAndDrop.paths)
             };
 
-            cmd.Execute(input, out FetchRelevantAssetsOutputs output);
+            FetchRelevantAssetsOutputs output;
+
+            FetchRelevantAssetsCommand cmd = new FetchRelevantAssetsCommand();
+            cmd.Execute(input, out output);
+
 
             int totalAssetCount = output.Models.Count + output.Anims.Count;
 

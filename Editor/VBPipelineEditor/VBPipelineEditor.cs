@@ -120,6 +120,8 @@ namespace VirtualBeings
 
         private void Initialize()
         {
+            minSize = EditorData.WindowMinSize;
+
             EditorDataField.value = EditorData;
             EditorDataField.SetEnabled(false);
             VBBanner.usageHints = UsageHints.DynamicTransform;
