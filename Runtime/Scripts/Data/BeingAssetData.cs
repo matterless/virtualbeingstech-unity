@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using UnityEditor.Animations;
 using UnityEngine;
 using VirtualBeings.Tech.BehaviorComposition;
-using static VirtualBeings.BeingAssetData;
 
 namespace VirtualBeings
 {
@@ -53,7 +51,7 @@ namespace VirtualBeings
     public class CreateStatesContext
     {
         [SerializeField]
-        public AnimatorController animatorController;
+        public RuntimeAnimatorController animatorController;
 
         [SerializeField]
         public List<string> states = new List<string>();
