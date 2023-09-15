@@ -8,6 +8,8 @@ using UnityEngine.UIElements;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Experimental.Rendering;
+using Unity.Profiling;
 
 namespace VirtualBeings.UIElements
 {
@@ -51,7 +53,8 @@ namespace VirtualBeings.UIElements
         public Quaternion CameraRotation { get; set; }
 
         private CommandBuffer _previewCmd;
-        private RenderTexture _previewTexture;
+        private RenderTexture _colorBuffer;
+        private RenderTexture _depthBuffer;
 
         private UIInputListener _inputListener;
 
@@ -62,7 +65,10 @@ namespace VirtualBeings.UIElements
             focusable = true;
             Focus();
             CameraRotation = Quaternion.identity;
+            MeshMaterials = new List<Material>();
             _previewCmd = new CommandBuffer();
+            _previewCmd.name = "Editor rendering CommandBuffer";
+
             VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(UXML_PATH);
             StyleSheet styling = AssetDatabase.LoadAssetAtPath<StyleSheet>(USS_PATH);
 
@@ -179,41 +185,53 @@ namespace VirtualBeings.UIElements
         {
             if (!_previewImage.IsLayoutBuilt())
             {
-                _previewImage.image = _previewTexture;
+                _previewImage.image = _colorBuffer;
                 _previewImage.MarkDirtyRepaint();
                 return;
             }
 
             if (_previewImage.contentRect.width == 0 || _previewImage.contentRect.height == 0)
             {
-                _previewImage.image = _previewTexture;
+                _previewImage.image = _colorBuffer;
                 _previewImage.MarkDirtyRepaint();
                 return;
             }
 
-            bool recreatedTex = _previewTexture == null ||
-                            _previewTexture.width != _previewImage.contentRect.width ||
-                            _previewTexture.height != _previewImage.contentRect.height;
+            bool recreatedTex = _colorBuffer == null ||
+                            _colorBuffer.width != _previewImage.contentRect.width ||
+                            _colorBuffer.height != _previewImage.contentRect.height;
             if (recreatedTex)
             {
-                if (_previewTexture != null)
+                if (_colorBuffer != null)
                 {
-                    _previewTexture.Release();
+                    _colorBuffer.Release();
+                }
+                if (_depthBuffer != null)
+                {
+                    _depthBuffer.Release();
                 }
 
                 RenderTextureDescriptor desc = new RenderTextureDescriptor()
                 {
                     width = (int)_previewImage.contentRect.width,
                     height = (int)_previewImage.contentRect.height,
-                    depthBufferBits = 0,
+                    depthBufferBits = 16,
                     msaaSamples = 1,
                     volumeDepth = 1,
+                    depthStencilFormat = GraphicsFormat.None,
+                    stencilFormat = GraphicsFormat.None,
                     enableRandomWrite = false,
                     dimension = TextureDimension.Tex2D,
-                    graphicsFormat = UnityEngine.Experimental.Rendering.GraphicsFormat.R32G32B32A32_SFloat
+                    graphicsFormat = GraphicsFormat.R16G16B16A16_SFloat
                 };
 
-                _previewTexture = new RenderTexture(desc);
+                var colorDesc = desc;
+                var depthDesc = desc;
+                depthDesc.depthBufferBits = 32;
+                depthDesc.graphicsFormat = GraphicsFormat.None;
+                depthDesc.depthStencilFormat = GraphicsFormat.D32_SFloat;
+                _colorBuffer = new RenderTexture(colorDesc);
+                _depthBuffer = new RenderTexture(depthDesc);
             }
 
             if (Mesh != null)
@@ -226,31 +244,33 @@ namespace VirtualBeings.UIElements
                 _previewMessage.text = "Select a model to preview";
             }
 
-            _previewImage.image = _previewTexture;
+            _previewImage.image = _colorBuffer;
             _previewImage.MarkDirtyRepaint();
         }
 
         private void RenderToTexture(Mesh mesh, CommandBuffer previewCmd, Matrix4x4 modelMatrix)
         {
-            previewCmd.Clear();
-            previewCmd.SetRenderTarget(_previewTexture);
-            previewCmd.ClearRenderTarget(true, true, Color.clear);
-
             float fov = 60;
-            float aspect = _previewTexture.width / (float)_previewTexture.height;
+            float aspect = _colorBuffer.width / (float)_colorBuffer.height;
             Matrix4x4 proj = Matrix4x4.Perspective(fov, aspect, 0.3f, 100f);
             Matrix4x4 projGPU = GL.GetGPUProjectionMatrix(proj, true);
 
-            Matrix4x4 camTransform = Matrix4x4.TRS(CameraPosition, CameraRotation, Vector3.one);
-            camTransform = camTransform.inverse;
+            Matrix4x4 lookMatrix = Matrix4x4.TRS(CameraPosition, CameraRotation, Vector3.one);
 
-            Matrix4x4 scaleMatrix = Matrix4x4.Scale(new Vector3(1, 1, -1));
-            Matrix4x4 viewMatrix = scaleMatrix * camTransform;
+            Matrix4x4 scaleMatrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(1, 1, -1));
 
+            Matrix4x4 viewMatrix = scaleMatrix * lookMatrix.inverse;
+
+            GlobalKeyword directonal = new GlobalKeyword("DIRECTIONAL");
+            previewCmd.Clear();
+            previewCmd.BeginSample("Editor rendering");
+            previewCmd.EnableKeyword(directonal);
+            previewCmd.SetRenderTarget(_colorBuffer, _depthBuffer);
+            previewCmd.ClearRenderTarget(RTClearFlags.All, Color.clear, 1, 0);
             previewCmd.SetViewProjectionMatrices(viewMatrix, projGPU);
             previewCmd.SetGlobalVector("_LightColor0", new Vector4(2, 1.72f, 1.3f, 2));
             previewCmd.SetGlobalVector("_LightShadowData", new Vector4(0, 66.66666f, 0.3333333f, -2.6666670f));
-            previewCmd.SetGlobalVector("_WorldSpaceCameraPos", new Vector4( CameraPosition.x , CameraPosition.y , CameraPosition.z , 0));
+            previewCmd.SetGlobalVector("_WorldSpaceCameraPos", new Vector4(CameraPosition.x, CameraPosition.y, CameraPosition.z, 0));
             previewCmd.SetGlobalVector("_WorldSpaceLightPos0", new Vector4(0.3213938f, 0.7660444f, -0.5566704f, 0));
 
             if (MeshMaterials == null)
@@ -260,9 +280,16 @@ namespace VirtualBeings.UIElements
 
             if (UsePreviewMaterial)
             {
+                int passIndex = PreviewMaterial.FindPass("FORWARD");
+
+                for (int i = 0; i < PreviewMaterial.passCount; ++i)
+                {
+                    Debug.Log(PreviewMaterial.GetPassName(i));
+                }
+
                 for (int i = 0; i < mesh.subMeshCount; ++i)
                 {
-                    previewCmd.DrawMesh(mesh, modelMatrix, PreviewMaterial, i, -1);
+                    previewCmd.DrawMesh(mesh, modelMatrix, PreviewMaterial, i, 0);
                 }
             }
             else
@@ -274,11 +301,14 @@ namespace VirtualBeings.UIElements
                 {
                     for (int i = 0; i < mesh.subMeshCount; ++i)
                     {
-                        previewCmd.DrawMesh(mesh, modelMatrix, MeshMaterials[i], i, -1);
+                        Material mat = MeshMaterials[i];
+                        int passIndex = mat.FindPass("FORWARD");
+                        previewCmd.DrawMesh(mesh, modelMatrix, mat, i, passIndex);
                     }
                 }
             }
 
+            previewCmd.EndSample("Editor rendering");
             Graphics.ExecuteCommandBuffer(previewCmd);
         }
 

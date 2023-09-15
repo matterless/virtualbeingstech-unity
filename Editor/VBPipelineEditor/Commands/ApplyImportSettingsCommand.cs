@@ -45,6 +45,7 @@ namespace VirtualBeings
             Avatar modelAvater = null;
 
             BeingAssetData dataAsset = new BeingAssetData();
+            dataAsset.ImportContext = new ImportModelContext();
             dataAsset.ImportContext.BeingArchetype = input.BeingArchetype;
 
             // model
@@ -55,10 +56,10 @@ namespace VirtualBeings
 
                 modelAvater = allAssets.OfType<Avatar>().FirstOrDefault();
                 Mesh modelMesh = allAssets.OfType<Mesh>().FirstOrDefault();
+                SkinnedMeshRenderer skinnedMesh = allAssets.OfType<SkinnedMeshRenderer>().FirstOrDefault();
 
                 dataAsset.ImportContext.ModelAsset = input.ModelAsset;
-                dataAsset.ImportContext.ModelMesh = modelMesh;
-
+                
                 Assert.IsNotNull(modelAvater);
             }
 

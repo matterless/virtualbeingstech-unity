@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 using UnityEditor;
@@ -100,9 +101,17 @@ namespace VirtualBeings
             }
         }
 
-        public ImportModelView(VBPipelineEditorData data, VBPipelineEditor editor)
+        public ImportModelView(VBPipelineEditorData data, VBPipelineEditor editor, ImportModelContext context = null)
         {
-            this.Context = new ImportModelContext();
+            if (context != null)
+            {
+                this.Context = context;
+            }
+            else
+            {
+                this.Context = new ImportModelContext();
+            }
+
             this._animationTreeSource = new List<TreeViewItemData<IAnimationTreeNode>>();
             this._editorData = data;
             this._editor = editor;
@@ -112,6 +121,8 @@ namespace VirtualBeings
             Initialize();
 
             Listen();
+
+            ApplyContext();
         }
 
         private void LoadUI()
@@ -197,7 +208,7 @@ namespace VirtualBeings
             _animationsTree.showAlternatingRowBackgrounds = AlternatingRowBackground.All;
             _animationsTree.virtualizationMethod = CollectionVirtualizationMethod.DynamicHeight;
             _animationsTree.SetRootItems(_animationTreeSource);
-            
+
             ResetDomainAnimations(_beingTypePopup.value);
 #endif
             _meshViewer.UsePreviewMaterial = _useEditorMaterialToggle.value;
@@ -226,8 +237,8 @@ namespace VirtualBeings
             _dragNDropZone.RegisterCallback<DragLeaveEvent>(HandleDragExit);
             _dragNDropZone.RegisterCallback<DragExitedEvent>(HandleDragDone);
             _useEditorMaterialToggle.RegisterValueChangedCallback(HandlePreviewMaterialChanged);
+            _importScaleFactor.RegisterValueChangedCallback(HandleScaleFactorChanged);
         }
-
 
         private void Unlisten()
         {
@@ -242,7 +253,13 @@ namespace VirtualBeings
             _dragNDropZone.UnregisterCallback<DragEnterEvent>(HandleDragEnter);
             _dragNDropZone.UnregisterCallback<DragLeaveEvent>(HandleDragExit);
             _dragNDropZone.UnregisterCallback<DragExitedEvent>(HandleDragDone);
-            _useEditorMaterialToggle.RegisterValueChangedCallback(HandlePreviewMaterialChanged);
+            _useEditorMaterialToggle.UnregisterValueChangedCallback(HandlePreviewMaterialChanged);
+            _importScaleFactor.UnregisterValueChangedCallback(HandleScaleFactorChanged);
+        }
+
+        private void HandleScaleFactorChanged(ChangeEvent<float> evt)
+        {
+            Context.ScaleFactor = evt.newValue;
         }
 
         private void HandlePreviewMaterialChanged(ChangeEvent<bool> evt)
@@ -253,6 +270,7 @@ namespace VirtualBeings
         private void HandleBeingTypeChanged(ChangeEvent<BeingArchetype> evt)
         {
 #if UNITY_2022_1_OR_NEWER
+            Context.BeingArchetype = evt.newValue;
             ResetDomainAnimations(evt.newValue);
 #endif
         }
@@ -329,7 +347,7 @@ namespace VirtualBeings
             ApplyImportSettingsInputs input = new ApplyImportSettingsInputs()
             {
                 AnimationAssets = moveOutput.ModelAnimations,
-                BeingArchetype = _beingTypePopup.value,
+                BeingArchetype = Context.BeingArchetype,
                 ExportPath = moveOutput.ExportPath,
                 ModelAsset = moveOutput.ModelAsset,
                 ScaleFactor = _importScaleFactor.value
@@ -348,11 +366,9 @@ namespace VirtualBeings
 
         private void HandleBindItem(VisualElement ui, int index)
         {
-
             ModelAnimationEntry casted = (ModelAnimationEntry)ui;
             IAnimationTreeNode node = (IAnimationTreeNode)_animationsTree.viewController.GetItemForIndex(index);
             casted.Setup(node);
-
         }
 
         private VisualElement HandleMakeItem()
@@ -384,17 +400,15 @@ namespace VirtualBeings
                     AssetPath = dragPath,
                     AllBeingAssetsInProject = beingAssets
                 };
-                HasChildOrParentImportOutputs checkOutput = new HasChildOrParentImportOutputs();
 
                 HasChildOrParentImportCommand checkCmd = new HasChildOrParentImportCommand();
 
-                if (checkCmd.Execute(checkInput, out checkOutput))
+                if (checkCmd.Execute(checkInput, out HasChildOrParentImportOutputs checkOutput))
                 {
                     if (checkOutput.AssetImportError == ImportPathError.AssetIsImportFolder)
                     {
-                        _importAssetField.value = checkOutput.BeingAsset;
-                        LoadAsset(checkOutput.BeingAsset);
-                        ApplyContext(Context);
+                        _editor.LoadAsset(checkOutput.BeingAsset);
+                        ApplyContext();
                     }
 
                     return;
@@ -402,7 +416,7 @@ namespace VirtualBeings
             }
 
             FetchAssets();
-            ApplyContext(Context);
+            ApplyContext();
         }
 
         private void LoadAsset(BeingAssetData asset)
@@ -410,10 +424,6 @@ namespace VirtualBeings
             // copy the context data from the import asset
             Context.ModelAsset = asset.ImportContext.ModelAsset;
             Context.BeingArchetype = asset.ImportContext.BeingArchetype;
-            Context.ModelMesh = asset.ImportContext.ModelMesh;
-            Context.ModelMaterials.Clear();
-            Context.ModelMaterials.AddRange(asset.ImportContext.ModelMaterials);
-            Context.ModelMatrix = asset.ImportContext.ModelMatrix;
             Context.DomainAnimations.Clear();
             Context.DomainAnimations.AddRange(asset.ImportContext.DomainAnimations);
         }
@@ -465,10 +475,8 @@ namespace VirtualBeings
                     ModelAssetData model = output.Models[0];
 
                     Context.ModelAsset = model.ModelAsset;
-                    Context.ModelMesh = model.ModelMesh;
-                    Context.ModelMatrix = model.SkinnedMeshRenderer.transform.localToWorldMatrix;
-                    Context.ModelMaterials = new List<Material>();
-                    model.SkinnedMeshRenderer.GetSharedMaterials(Context.ModelMaterials);
+                    Context.AvatarMasks.Clear();
+                    Context.AvatarMasks.AddRange(output.AvatarMasks);
                 }
             }
 
@@ -490,8 +498,6 @@ namespace VirtualBeings
                     }
 
                     int domainIndex = -1;
-
-
 
                     for (int i = 0; i < domains.Length; i++)
                     {
@@ -520,12 +526,31 @@ namespace VirtualBeings
             }
         }
 
-        private void ApplyContext(ImportModelContext Context)
+        internal void ApplyContext()
         {
-            _meshModel.value = Context.ModelMesh;
-            _meshViewer.Mesh = Context.ModelMesh;
-            _meshViewer.ModelMatrix = Context.ModelMatrix;
-            _meshViewer.MeshMaterials = Context.ModelMaterials;
+            Mesh modelMesh = null;
+            SkinnedMeshRenderer skinnedMesh = null;
+            Matrix4x4 meshMatrix = Matrix4x4.identity;
+
+            if (Context.ModelAsset != null)
+            {
+                string path = AssetDatabase.GetAssetPath(Context.ModelAsset);
+                UnityEngine.Object[] allAssets = AssetDatabase.LoadAllAssetsAtPath(path);
+                modelMesh = allAssets.OfType<Mesh>().FirstOrDefault();
+                skinnedMesh = allAssets.OfType<SkinnedMeshRenderer>().FirstOrDefault();
+                meshMatrix = skinnedMesh.transform.localToWorldMatrix;
+            }
+
+            _meshModel.value = modelMesh;
+            _meshViewer.Mesh = modelMesh;
+            _meshViewer.ModelMatrix = meshMatrix;
+            _meshViewer.MeshMaterials.Clear();
+
+            if (skinnedMesh != null)
+            {
+                skinnedMesh.GetSharedMaterials(_meshViewer.MeshMaterials);
+            }
+
             _meshViewer.PreviewMaterial = _editorData.PreviewMaterial;
             _beingTypePopup.value = Context.BeingArchetype;
 #if UNITY_2022_1_OR_NEWER

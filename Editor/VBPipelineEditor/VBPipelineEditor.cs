@@ -10,6 +10,7 @@ using UnityEngine;
 using UnityEditor.UIElements;
 using System;
 using System.Collections.Generic;
+using UnityEditor.Callbacks;
 
 namespace VirtualBeings
 {
@@ -28,8 +29,9 @@ namespace VirtualBeings
     /// </summary>
     internal class PipelineContext
     {
+        internal BeingAssetData BeingAsset;
         internal ImportModelContext ImportModelContext;
-        internal CreateStatesContext createStatesContext;
+        internal CreateStatesContext CreateStatesContext;
     }
 
     /// <summary>
@@ -42,7 +44,7 @@ namespace VirtualBeings
 
         internal const string UXML_PATH = BASE_PATH + "/" + nameof(VBPipelineEditor) + ".uxml";
         internal const string DATA_PATH = BASE_PATH + "/" + nameof(VBPipelineEditorData) + ".asset";
-        internal const string USS_PATH  = BASE_PATH + "/" + nameof(VBPipelineEditor) + ".uss";
+        internal const string USS_PATH = BASE_PATH + "/" + nameof(VBPipelineEditor) + ".uss";
 
         [MenuItem("VIRTUAL BEINGS/VB Pipeline")]
         public static void ShowWindow()
@@ -58,7 +60,7 @@ namespace VirtualBeings
         private Button PrevStepBtn => rootVisualElement.Q<Button>(nameof(PrevStepBtn));
         private VBPipelineEditorData EditorData { get; set; }
 
-        private PipelineContext pipelineContext;
+        private PipelineContext pipelineContext = new PipelineContext();
 
         private ImportModelView importModelView;
         private CreateStatesView createStatesView;
@@ -76,6 +78,37 @@ namespace VirtualBeings
             Initialize();
 
             Listen();
+        }
+
+        internal void LoadAsset(BeingAssetData beingAsset)
+        {
+            pipelineContext.BeingAsset = beingAsset;
+
+            // import context
+            pipelineContext.ImportModelContext.ModelAsset = beingAsset.ImportContext.ModelAsset;
+            pipelineContext.ImportModelContext.BeingArchetype = beingAsset.ImportContext.BeingArchetype;
+
+            pipelineContext.ImportModelContext.DomainAnimations.Clear();
+            pipelineContext.ImportModelContext.DomainAnimations.AddRange(beingAsset.ImportContext.DomainAnimations);
+
+            // todo : create state context
+        }
+
+        [OnOpenAsset(1)]
+        public static bool OnOpenCallback(int instanceID, int line)
+        {
+            UnityEngine.Object asset = EditorUtility.InstanceIDToObject(instanceID);
+
+            if (!(asset is BeingAssetData beingData))
+                return false;
+
+            VBPipelineEditor wnd = GetWindow<VBPipelineEditor>();
+            wnd.titleContent = new GUIContent(nameof(VBPipelineEditor));
+
+            wnd.LoadAsset(beingData);
+            wnd.importModelView.ApplyContext();
+            
+            return true;
         }
 
         private void EnsureDataAssetExists()
@@ -97,7 +130,6 @@ namespace VirtualBeings
 
         private void LoadUI()
         {
-
             VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(UXML_PATH);
             StyleSheet styling = AssetDatabase.LoadAssetAtPath<StyleSheet>(USS_PATH);
 
@@ -105,13 +137,11 @@ namespace VirtualBeings
             rootVisualElement.styleSheets.Add(styling);
             rootVisualElement.styleSheets.Add(EditorConsts.GlobalStylesheet);
 
-            pipelineContext = new PipelineContext();
+            pipelineContext.ImportModelContext = new ImportModelContext();
+            pipelineContext.CreateStatesContext = new CreateStatesContext();
 
-            importModelView = new ImportModelView(EditorData, this);
-            pipelineContext.ImportModelContext = importModelView.Context;
-
-            createStatesView = new CreateStatesView(EditorData, this);
-            pipelineContext.createStatesContext  = createStatesView.Context;
+            importModelView = new ImportModelView(EditorData, this, pipelineContext.ImportModelContext);
+            createStatesView = new CreateStatesView(EditorData, this, pipelineContext.CreateStatesContext);
 
             ImportModelContainer.Add(importModelView);
             ImportModelContainer.Add(createStatesView);
@@ -209,5 +239,7 @@ namespace VirtualBeings
         {
             Unlisten();
         }
+
+
     }
 }

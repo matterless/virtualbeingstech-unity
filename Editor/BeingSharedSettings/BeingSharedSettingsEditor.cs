@@ -11,6 +11,9 @@ using VirtualBeings.Tech.ActiveCognition;
 using UnityEditor.Animations;
 using System.Collections.Generic;
 using System;
+using UnityEngine.Pool;
+using System.Linq;
+using UnityEngine;
 
 namespace VirtualBeings
 {
@@ -41,25 +44,26 @@ namespace VirtualBeings
             nameof(BeingSharedSettings.LayerIndexRightHand )
         };
 
-        private const string BASE_PATH  = EditorConsts.GLOBAL_EDTOR_BASE_PATH + "/BeingSharedSettings";
-        private const string UXML_PATH  = BASE_PATH + "/" + nameof(BeingSharedSettingsEditor) + ".uxml";
-        private const string USS_PATH   = BASE_PATH + "/" + nameof(BeingSharedSettingsEditor) + ".uss";
- 
-        private readonly BeingSharedSettings    _beingSharedSettings;
-        private readonly Action                 _updateAnimationCallback;
-      
-        private VisualElement   _animationSection           => this.Q<VisualElement>(nameof(_animationSection));
-        private VisualElement   _animationPopups            => this.Q<VisualElement>(nameof(_animationPopups));
-        private HelpBox         _animationValidationState   => this.Q<HelpBox>(nameof(_animationValidationState));
-        private Button          _updateAnimationDataBtn     => this.Q<Button>(nameof(_updateAnimationDataBtn));
+        private const string BASE_PATH = EditorConsts.GLOBAL_EDTOR_BASE_PATH + "/BeingSharedSettings";
+        private const string UXML_PATH = BASE_PATH + "/" + nameof(BeingSharedSettingsEditor) + ".uxml";
+        private const string USS_PATH = BASE_PATH + "/" + nameof(BeingSharedSettingsEditor) + ".uss";
 
-        private List<PopupField<int>>       _popupFields = new List<PopupField<int>>();
-        private AnimatorController          _animatorController;
-        private AnimatorControllerLayer[]   _layers;
-        private List<int>                   _allIndicies = new List<int>();
-        private List<int>[]                 _dynamicIndicies = new List<int>[_animatorLayerIndicies.Count];
-        
-        public BeingSharedSettingsEditor(BeingSharedSettings beingSharedSettings , Action updateAnimationCallback)
+        private readonly BeingSharedSettings _beingSharedSettings;
+        private readonly Action _updateAnimationCallback;
+        private const string HEADER_CSS_CLASS = "inspector-header";
+
+        private VisualElement _animationSection => this.Q<VisualElement>(nameof(_animationSection));
+        private VisualElement _animationPopups => this.Q<VisualElement>(nameof(_animationPopups));
+        private HelpBox _animationValidationState => this.Q<HelpBox>(nameof(_animationValidationState));
+        private Button _updateAnimationDataBtn => this.Q<Button>(nameof(_updateAnimationDataBtn));
+
+        private List<PopupField<int>> _popupFields = new List<PopupField<int>>();
+        private AnimatorController _animatorController;
+        private AnimatorControllerLayer[] _layers;
+        private List<int> _allIndicies = new List<int>();
+        private List<int>[] _dynamicIndicies = new List<int>[_animatorLayerIndicies.Count];
+
+        public BeingSharedSettingsEditor(BeingSharedSettings beingSharedSettings, Action updateAnimationCallback)
         {
             this._beingSharedSettings = beingSharedSettings;
             this._updateAnimationCallback = updateAnimationCallback;
@@ -112,8 +116,8 @@ namespace VirtualBeings
         void RefrehshLayers()
         {
             _allIndicies.Clear();
-            
-            foreach(List<int> d in _dynamicIndicies)
+
+            foreach (List<int> d in _dynamicIndicies)
             {
                 d.Clear();
             }
@@ -151,48 +155,78 @@ namespace VirtualBeings
             SerializedProperty animatorProp = serializedObject.FindProperty(nameof(BeingSharedSettings.AnimatorController));
             this.TrackPropertyValue(animatorProp, HandleAnimatorChanged);
             this.TrackSerializedObjectValue(serializedObject, HandleAssetChanged);
+
             SerializedProperty iterator = serializedObject.GetIterator();
-            iterator.NextVisible(true);
 
-            while (iterator.NextVisible(false))
+            Type beingType = _beingSharedSettings.GetType();
+            IInspectorDecorator decorator = InspectorDecoratorFactory.GetDecorator(beingType);
+
+            using (ListPool<MemberDecoration>.Get(out var decs))
             {
-                // animator controller field
-                if (iterator.name == nameof(BeingSharedSettings.AnimatorController))
+                decs.AddRange(decorator.GetMemberDecorations(beingType));
+
+                iterator.NextVisible(true);
+
+                do
                 {
-                    PropertyField propertyField = new PropertyField(iterator) { name = "PropertyField:" + iterator.propertyPath };
-                    propertyField.BindProperty(iterator);
-                    _animationSection.Insert(0, propertyField);
-                    continue;
+                    // animator controller field
+                    if (iterator.name == nameof(BeingSharedSettings.AnimatorController))
+                    {
+                        PropertyField propertyField = new PropertyField(iterator) { name = "PropertyField:" + iterator.propertyPath };
+                        propertyField.Bind(serializedObject);
+                        _animationSection.Insert(0, propertyField);
+                        continue;
+                    }
+
+                    // layers indicies
+                    int index = -1;
+                    if ((index = _animatorLayerIndicies.IndexOf(iterator.name)) != -1)
+                    {
+                        PopupField<int> popup = new PopupField<int>(_dynamicIndicies[index], 0, null, IndexToDropdownLabel);
+                        _popupFields.Add(popup);
+
+                        popup.formatSelectedValueCallback = IndexToSelectedLabel(popup);
+                        popup.BindProperty(iterator);
+                        popup.SetEnabled(_animatorController != null);
+
+                        this.TrackPropertyValue(iterator, HandleLayerChanged);
+                        _animationPopups.Add(popup);
+                        continue;
+                    }
+
+                    FilterDropdownChoices();
+
+                    // rest of the properties
+                    {
+                        PropertyField propertyField = new PropertyField(iterator) { name = "PropertyField:" + iterator.propertyPath };
+                        propertyField.Bind(serializedObject);
+
+                        // script field
+                        if (iterator.propertyPath == "m_Script" && serializedObject.targetObject != null)
+                        {
+                            propertyField.SetEnabled(false);
+                            this.Insert(0, propertyField);
+                            continue;
+                        }
+#if !UNITY_2022_1_OR_NEWER
+                        // add the headers
+                        MemberDecoration dec = decs.FirstOrDefault(d => d.MemberInfo.Name == iterator.name);
+                        if (dec.MemberInfo != null)
+                        {
+
+                            foreach (HeaderAttribute att in dec.Attributes.OfType<HeaderAttribute>())
+                            {
+                                Label headerElement = new Label(att.header);
+                                headerElement.AddToClassList(HEADER_CSS_CLASS);
+                                this.Add(headerElement);
+                            }
+
+                        }
+#endif
+                        this.Add(propertyField);
+                    }
                 }
-
-                // layers indicies
-                int index = -1;
-                if ((index = _animatorLayerIndicies.IndexOf(iterator.name)) != -1)
-                {
-                    PopupField<int> popup = new PopupField<int>(_dynamicIndicies[index], 0, null, IndexToDropdownLabel);
-                    _popupFields.Add(popup);
-
-                    popup.formatSelectedValueCallback = IndexToSelectedLabel(popup);
-                    popup.BindProperty(iterator);
-                    popup.SetEnabled(_animatorController != null);
-
-                    this.TrackPropertyValue(iterator, HandleLayerChanged);
-                    _animationPopups.Add(popup);
-                    continue;
-                }
-
-                FilterDropdownChoices();
-
-                // rest of the properties
-                {
-                    PropertyField propertyField = new PropertyField(iterator) { name = "PropertyField:" + iterator.propertyPath };
-                    propertyField.BindProperty(iterator);
-
-                    if (iterator.propertyPath == "m_Script" && serializedObject.targetObject != null)
-                        propertyField.SetEnabled(value: false);
-
-                    this.Add(propertyField);
-                }
+                while (iterator.NextVisible(false));
             }
         }
 

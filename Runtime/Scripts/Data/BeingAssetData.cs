@@ -32,14 +32,11 @@ namespace VirtualBeings
         public GameObject ModelAsset;
 
         [SerializeField]
-        public Mesh ModelMesh;
+        public float ScaleFactor;
 
         [SerializeField]
-        public List<Material> ModelMaterials;
-
-        [SerializeField]
-        public Matrix4x4 ModelMatrix;
-
+        public List<AvatarMask> AvatarMasks = new List<AvatarMask>();
+    
         [SerializeField]
         public List<DomainAnimationData> DomainAnimations = new List<DomainAnimationData>();
     }

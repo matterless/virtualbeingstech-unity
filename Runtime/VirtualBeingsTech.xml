@@ -2044,6 +2044,11 @@
             Change target (can be null)
             </summary>
         </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.MouthTargeting.IsHoldingTarget">
+            <summary>
+            Is the being holding the given interactable with its mouth ?
+            </summary>
+        </member>
         <member name="M:VirtualBeings.Tech.BehaviorComposition.MouthTargeting.DoTargeting(System.Boolean,System.Boolean)">
             <summary>
             Use this after having set TargetFunc or TargetIInteractable. If we're Active *and* TargetIInteractable has been set *and*
@@ -2442,7 +2447,7 @@
             Release intentional offsets from head and/or eyes
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.BehaviorComposition.LookBase.DoFST(VirtualBeings.Tech.BehaviorComposition.IFST,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)">
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.LookBase.DoFST(VirtualBeings.Tech.BehaviorComposition.IFST,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)">
             <summary>
             Request a facial self-transition (FST)
             </summary>
@@ -2481,9 +2486,16 @@
         </member>
         <member name="M:VirtualBeings.Tech.BehaviorComposition.LookBase.#ctor(VirtualBeings.Tech.BehaviorComposition.IActivity,System.Func{UnityEngine.Vector3},System.Boolean,System.Boolean,System.Single,VirtualBeings.Tech.BehaviorComposition.IEmoter,VirtualBeings.BehaviorComposition.ILookTargetStabilizer,System.Nullable{VirtualBeings.Tech.BehaviorComposition.ExpressionWrapper})">
             <summary>
+            <param name="parent"></param>
+            <param name="targetProvider"></param>
+            <param name="randomizeLookDirection"></param>
+            <param name="randomizeEyesDirection"></param>
             Use this constructor to look (initially) at a position provided by a Func(Vector3). Can be null, and can later be changed to an IInteractable.
             If null, the being will look straight ahead into the distance.
             <param name="headWeight">[0,1] Determines how much the head is involved in the LookAt</param>
+            <param name="emoter"></param>
+            <param name="lookTargetStabilizer"></param>
+            <param name="expression"></param>
             <param name="eyeWeight">[0,1] Determines how much the eyes are involved in the LookAt</param>
             <param name="bodyWeight">(Only relevant for humanoids) [0,1] Determines how much the body is involved in the LookAt.
             One should be careful when using high values for the body, as it can end-up with un-natural poses when
@@ -2529,7 +2541,6 @@
             TODO: This is an hardcoded and simple way to spend more time in the "no offset" eyes look position
             that in the "look outwards" position.
             </summary>
-            <param name="eyesLookedOutside"></param>
         </member>
         <member name="T:VirtualBeings.Tech.BehaviorComposition.LookDouble">
             <summary>
@@ -3289,11 +3300,11 @@
              <summary>
              Schedule a mouth pickup (where an object starts to follow the mouthtarget [instead of the reverse]
              when the animated mouth IK weight is high enough).
-             If holdAndDestroy is true, the object isn't simply released (like a ball) but destroyed (like a piece of food).
+             If destroyOnRelease is true, the object isn't simply released (like a ball) but destroyed (like a piece of food).
             
              What happens then is that a DomainStateAction will be started which monitors the animated property FBIK_TongueTip
              to decide 1) when to start handling (and hence moving) the interactable, and 2) when to either unhandle or destroy
-             the interactable (the latter if holdAndDestroy is true).
+             the interactable (the latter if destroyOnRelease is true).
              Nothing else is done by the DSA, no animation or behavior etc is triggered.
              </summary>
         </member>
@@ -3740,13 +3751,13 @@
              <summary>
              Schedule a mouth pickup (where an object starts to follow the mouthtarget [instead of the reverse]
              when the animated mouth IK weight is high enough).
-             If holdAndDestroy is true, the object isn't simply released (like a ball) but destroyed
+             If destroyOnRelease is true, the object isn't simply released (like a ball) but destroyed
              (like a piece of food).
             
              What happens then is that a DomainStateAction will be started which monitors the animated property
              FBIK_TongueTip to decide
              1) when to start handling (and hence moving) the interactable
-             2) when to either unhandle or destroy the interactable (the latter if holdAndDestroy is true).
+             2) when to either unhandle or destroy the interactable (the latter if destroyOnRelease is true).
              Nothing else is done by the DSA, no animation or behavior etc is triggered.
              </summary>
         </member>
@@ -3817,6 +3828,21 @@
             <summary>
             Are we either in an additive expression (yawn, meow etc) or a transition expression (OT or ST)?
             </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.BehaviorComposition.IFaceActuator.RequestFST(VirtualBeings.Tech.BehaviorComposition.IFST,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+            Request a FST
+            </summary>
+            <param name="st"></param>
+            <param name="crossFadeTime"></param>
+            <param name="targetIntensity01">How fast to reach the ST</param>
+            <param name="targetVariation01"></param>
+            <param name="transitionSpeed01"></param>
+            <param name="transitionIntensity01">The parameter used in the ST blendtree, if used</param>
+            <param name="transitionLeftRight">he parameter used in the ST blendtree, if used</param>
+            <param name="eyesClosed01"></param>
+            <param name="preferredDuration"></param>
+            <param name="volume01"></param>
         </member>
         <member name="T:VirtualBeings.Tech.BehaviorComposition.IGroundingActuator">
             <summary>
@@ -4666,6 +4692,11 @@
         <member name="P:VirtualBeings.Tech.BehaviorComposition.MouthTargetingBehavior.UseVelocityBasedTargetCorrection">
             <summary>
             Only set to true if ForceTargeting() isn't also used (or just was, or will be)
+            </summary>
+        </member>
+        <member name="P:VirtualBeings.Tech.BehaviorComposition.MouthTargetingBehavior.IsHoldingTarget">
+            <summary>
+            Is the being holding the given interactable target with its mouth ?
             </summary>
         </member>
         <member name="M:VirtualBeings.Tech.BehaviorComposition.MouthTargetingBehavior.DoTargeting(System.Boolean,System.Boolean)">
@@ -6881,8 +6912,10 @@
             Get the first NavigableTerrain that contains the given position.
             </summary>
             <param name="position"></param>
-            <param name="yOffset"></param>
-            <param name="yMaxCeiling"></param>
+            <param name="yOffset">The "safety margin" below the plane navigable terrain, should usually be set to
+            SharedSettings.HeightForGroundingRaycasts.
+            </param>
+            <param name="yMaxCeiling">Optionnal max ceiling to check if the position given is under it</param>
             <param name="margin"></param>
             <returns></returns>
         </member>

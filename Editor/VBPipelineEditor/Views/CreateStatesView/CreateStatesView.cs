@@ -39,10 +39,10 @@ namespace VirtualBeings
     /// <summary>
     /// Data representing the state/info of the <see cref="CreateStatesView"/>
     /// </summary>
-    internal class CreateStatesContext
+    public class CreateStatesContext
     {
-        internal AnimatorController animatorController;
-        internal List<string>       states = new List<string>();
+        public AnimatorController animatorController;
+        public List<string>       states = new List<string>();
     }
 
     /// <summary>
@@ -71,9 +71,9 @@ namespace VirtualBeings
 
         public event Action<IPipelineStep> OnStepChanged;
 
-        internal CreateStatesView(VBPipelineEditorData data, VBPipelineEditor editor)
+        internal CreateStatesView(VBPipelineEditorData data, VBPipelineEditor editor, CreateStatesContext context)
         {
-            this.Context = new CreateStatesContext();
+            this.Context = context;
             this._currentSTs = new List<STEditorInfo>();
             this._allRSs = new List<RSEditorInfo>();
             this._editorData = data;

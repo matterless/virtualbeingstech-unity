@@ -96,3 +96,10 @@
     -unity-font-style: bold;
     font-size: 20px;
 }
+
+.inspector-header {
+    -unity-font-style: bold;
+    margin-top: 15px;
+    margin-bottom: 7px;
+    font-size: 13px;
+}

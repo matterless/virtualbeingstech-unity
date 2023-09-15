@@ -23,6 +23,19 @@ namespace VirtualBeings
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             BeingSharedSettings parent = property.serializedObject.targetObject as BeingSharedSettings;
+
+            VisualElement container = new VisualElement();
+
+            PropertyField soundsField = new PropertyField(property.FindPropertyRelative("Sounds"));
+            soundsField.Bind(property.serializedObject);
+
+            if (parent == null)
+            {
+                container.Add(soundsField);
+                return container;
+            }
+
+
             RSTransitionInfo[] transitions = parent.RSTransitionInfos;
             AnimatorController animController = (AnimatorController)parent.AnimatorController;
 
@@ -56,15 +69,12 @@ namespace VirtualBeings
             PopupField<string> rsDropdown = new PopupField<string>("RS", rsList, 0, str => str, str => str);
             PopupField<string> targetRsDropdown = new PopupField<string>("Target RS", targetRsList, 0, str => str, str => str);
             PopupField<string> transitionTypes = new PopupField<string>("Transition Type", transitionList, 0, str => str, str => str);
-            PropertyField soundsField = new PropertyField(property.FindPropertyRelative("Sounds"));
+
 
             rsDropdown.BindProperty(property.FindPropertyRelative(nameof(OT_SoundList.RS)));
             targetRsDropdown.BindProperty(property.FindPropertyRelative(nameof(OT_SoundList.TargetRS)));
             transitionTypes.BindProperty(property.FindPropertyRelative(nameof(OT_SoundList.TransitionType)));
-            soundsField.Bind(property.serializedObject);
 
-            // Create property container element
-            VisualElement container = new VisualElement();
 
             // Add fields to the container.
             container.Add(rsDropdown);
