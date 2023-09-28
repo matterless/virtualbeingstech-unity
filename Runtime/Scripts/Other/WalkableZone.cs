@@ -166,5 +166,10 @@ namespace VirtualBeings.Tech.Shared
         }
 
         protected InteractionDB _interactionDB;
+
+        public Vector3    GrabPosition         => Vector3.zero;
+        public Vector3    GrabOffset           => Vector3.zero;
+        public Quaternion GrabOffsetRotation   => Quaternion.identity;
+        public bool       IsGrabbable          => false;
     }
 }

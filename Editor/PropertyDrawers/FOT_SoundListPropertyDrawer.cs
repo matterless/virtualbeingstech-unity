@@ -37,35 +37,27 @@ namespace VirtualBeings
             RSTransitionInfo[] transitions = parent.RSTransitionInfos;
             AnimatorController animController = (AnimatorController)parent.AnimatorController;
 
-            List<string> rsList = new List<string>();
-            List<string> targetRsList = new List<string>();
+            List<string> sourceFS = new List<string>();
+            List<string> targetFS = new List<string>();
             List<string> transitionList = new List<string>();
 
-            foreach (string t in parent.GetTransitions())
+            foreach (IFTT transition in parent.GetFacialTransitions())
             {
-                transitionList.Add(t);
+                transitionList.Add(transition.Name);
+            }
+            
+            foreach (IFS fs in parent.GetFSs())
+            {
+                sourceFS.Add(fs.Name);
+                targetFS.Add(fs.Name);
             }
 
+            sourceFS.Sort();
+            targetFS.Sort();
 
-            foreach (AnimatorControllerLayer layer in animController.layers)
-            {
-                foreach (ChildAnimatorState s in layer.stateMachine.states)
-                {
-                    if (s.state.name.StartsWith("Root_") && layer.name == "Base Layer")
-                    {
-                        rsList.Add(s.state.name.Substring("Root_".Length));
-                    }
-
-                    if (s.state.name.Contains("_to_"))
-                    {
-                        targetRsList.Add($"{s.state.name}");
-                    }
-                }
-            }
-
-            PopupField<string> rsDropdown = new PopupField<string>(nameof(FOT_SoundList.FS), rsList, 0, str => str, str => str);
-            PopupField<string> targetRsDropdown = new PopupField<string>(nameof(FOT_SoundList.TargetFS), targetRsList, 0, str => str, str => str);
-            PopupField<string> transitionTypes = new PopupField<string>(nameof(FOT_SoundList.TransitionType), transitionList, 0, str => str, str => str);
+            PopupField<string> rsDropdown = new PopupField<string>("Source FS", sourceFS, 0, str => str, str => str);
+            PopupField<string> targetRsDropdown = new PopupField<string>("Target FS", targetFS, 0, str => str, str => str);
+            PopupField<string> transitionTypes = new PopupField<string>("Facial Transition Type", transitionList, 0, str => str, str => str);
 
             rsDropdown.BindProperty(property.FindPropertyRelative(nameof(FOT_SoundList.FS)));
             targetRsDropdown.BindProperty(property.FindPropertyRelative(nameof(FOT_SoundList.TargetFS)));

@@ -36,28 +36,24 @@ namespace VirtualBeings
 
             AnimatorController animController = (AnimatorController)parent.AnimatorController;
 
-            List<string> rsList = new List<string>();
-            List<string> stList = new List<string>();
+            List<string> fsList = new List<string>();
+            List<string> fstList = new List<string>();
 
-            foreach (AnimatorControllerLayer layer in animController.layers)
+            foreach(IFS fs in parent.GetFSs())
             {
-                foreach (ChildAnimatorState s in layer.stateMachine.states)
-                {
-                    if (s.state.name.StartsWith("Root_") && layer.name == "Base Layer")
-                    {
-                        rsList.Add(s.state.name.Substring("Root_".Length));
-                    }
-
-                    // todo : only add ST's linked to the RS in the animatorController
-                    if (s.state.name.StartsWith("ST"))
-                    {
-                        stList.Add($"{s.state.name}");
-                    }
-                }
+                fsList.Add(fs.Name);
             }
 
-            PopupField<string> rsDropdown = new PopupField<string>(nameof(FST_SoundList.FS), rsList, 0, str => str, str => str);
-            PopupField<string> stDropdown = new PopupField<string>(nameof(FST_SoundList.FST), stList, 0, str => str, str => str);
+            foreach(IFST fst in parent.GetFSTs())
+            {
+                fstList.Add(fst.Name);
+            }
+
+            fsList.Sort();
+            fstList.Sort();
+
+            PopupField<string> rsDropdown = new PopupField<string>(nameof(FST_SoundList.FS), fsList, 0, str => str, str => str);
+            PopupField<string> stDropdown = new PopupField<string>(nameof(FST_SoundList.FST), fstList, 0, str => str, str => str);
 
             rsDropdown.BindProperty(property.FindPropertyRelative(nameof(FST_SoundList.FS)));
             stDropdown.BindProperty(property.FindPropertyRelative(nameof(FST_SoundList.FST)));

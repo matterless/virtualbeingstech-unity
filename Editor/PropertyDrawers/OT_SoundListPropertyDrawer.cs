@@ -40,34 +40,26 @@ namespace VirtualBeings
             AnimatorController animController = (AnimatorController)parent.AnimatorController;
 
 
-            List<string> rsList = new List<string>();
-            List<string> targetRsList = new List<string>();
+            List<string> sourceRSList = new List<string>();
+            List<string> targetRSList = new List<string>();
             List<string> transitionList = new List<string>();
 
-            foreach (string t in parent.GetTransitions())
+            foreach (ITransitionType transition in parent.GetTransitions())
             {
-                transitionList.Add(t);
+                transitionList.Add(transition.Name);
+            }
+            foreach (IRS rs in parent.GetRSs())
+            {
+                sourceRSList.Add(rs.Name);
+                targetRSList.Add(rs.Name);
             }
 
+            sourceRSList.Sort();
+            targetRSList.Sort();
+            transitionList.Sort();
 
-            foreach (AnimatorControllerLayer layer in animController.layers)
-            {
-                foreach (ChildAnimatorState s in layer.stateMachine.states)
-                {
-                    if (s.state.name.StartsWith("Root_") && layer.name == "Base Layer")
-                    {
-                        rsList.Add(s.state.name.Substring("Root_".Length));
-                    }
-
-                    if (s.state.name.Contains("_to_"))
-                    {
-                        targetRsList.Add($"{s.state.name}");
-                    }
-                }
-            }
-
-            PopupField<string> rsDropdown = new PopupField<string>("RS", rsList, 0, str => str, str => str);
-            PopupField<string> targetRsDropdown = new PopupField<string>("Target RS", targetRsList, 0, str => str, str => str);
+            PopupField<string> rsDropdown = new PopupField<string>("Source RS", sourceRSList, 0, str => str, str => str);
+            PopupField<string> targetRsDropdown = new PopupField<string>("Target RS", targetRSList, 0, str => str, str => str);
             PopupField<string> transitionTypes = new PopupField<string>("Transition Type", transitionList, 0, str => str, str => str);
 
 

@@ -116,9 +116,6 @@ namespace VirtualBeings.Tech.Shared
                     }
 
                     position.y = hit.point.y;
-                    Misc.DrawDebugPoint(sphereCastOrigin, freeRadius, Color.magenta, 3f);
-                    Debug.DrawLine(sphereCastOrigin, sphereCastOrigin + Vector3.down * sphereCastDistance, Color.yellow, 3f);
-                    Misc.DrawDebugPoint(position, 0.1f, Color.green, 3f);
 
                     return true;
                 }
@@ -185,5 +182,10 @@ namespace VirtualBeings.Tech.Shared
         }
 
         protected InteractionDB _interactionDB;
+
+        public bool       IsGrabbable          => false;
+        public Vector3    GrabPosition         => Vector3.zero;
+        public Vector3    GrabOffset           => Vector3.zero;
+        public Quaternion GrabOffsetRotation   => Quaternion.identity;
     }
 }

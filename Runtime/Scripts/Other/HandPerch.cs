@@ -163,7 +163,7 @@ namespace VirtualBeings.Tech.Shared
             }
         }
 
-        public virtual bool ReadyForRootParenting(Being being)
+        public virtual bool ReadyForRootParenting(Being being = null)
         {
             return
                 (_currentPercher == null || _currentPercher == being) &&
@@ -246,6 +246,11 @@ namespace VirtualBeings.Tech.Shared
         public bool HasProperty(InteractableProperty property) => Properties.Contains((int)property);
         public bool IsInInteractionDB() => this != null && _interactionDB.IsInDatabase(this, typeof(IInteractable));
         public IAgent DestroyedBy { get; private set; }
+
+        public bool       IsGrabbable          => false;
+        public Vector3    GrabPosition         => Vector3.zero;
+        public Vector3    GrabOffset           => Vector3.zero;
+        public Quaternion GrabOffsetRotation   => Quaternion.identity;
 
         public Vector3 ApproachTarget => ConnectionPosition() + Vector3.up * 0.15f;
 

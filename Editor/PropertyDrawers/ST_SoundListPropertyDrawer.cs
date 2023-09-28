@@ -38,22 +38,18 @@ namespace VirtualBeings
             List<string> rsList = new List<string>();
             List<string> stList = new List<string>();
 
-            foreach (AnimatorControllerLayer layer in animController.layers)
+            foreach(IRS rs in parent.GetRSs())
             {
-                foreach (ChildAnimatorState s in layer.stateMachine.states)
-                {
-                    if (s.state.name.StartsWith("Root_") && layer.name == "Base Layer")
-                    {
-                        rsList.Add(s.state.name.Substring("Root_".Length));
-                    }
-
-                    // todo : only add ST's linked to the RS in the animatorController
-                    if (s.state.name.StartsWith("ST"))
-                    {
-                        stList.Add($"{s.state.name}");
-                    }
-                }
+                rsList.Add(rs.Name);
             }
+
+            foreach(IST st in parent.GetSTs())
+            {
+                stList.Add(st.Name);
+            }
+
+            rsList.Sort();
+            stList.Sort();
 
             PopupField<string> rsDropdown = new PopupField<string>("RS", rsList, 0, str => str, str => str);
             PopupField<string> stDropdown = new PopupField<string>("ST", stList, 0, str => str, str => str);
