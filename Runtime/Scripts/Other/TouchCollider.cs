@@ -29,6 +29,11 @@ namespace VirtualBeings.Tech.Shared
 
         public override void Init(EventManager worldEvents, InteractionDB interactionDB)
         {
+            if (_isInit)
+            {
+                Misc.LogWarning($"{this} is already initialised. Stop initialisation.");
+                return;
+            }
             _interactionDB = interactionDB;
             _worldEvents = worldEvents;
 
