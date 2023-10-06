@@ -12,6 +12,7 @@ using VirtualBeings.UIElements;
 using UnityEngine;
 using Unity.EditorCoroutines.Editor;
 using System.Collections;
+using System;
 
 namespace VirtualBeings
 {
@@ -32,7 +33,7 @@ namespace VirtualBeings
 
             yield return new WaitForSecondsRealtime(clip.length + 0.1f);
 
-            Object.DestroyImmediate(go);
+            UnityEngine.Object.DestroyImmediate(go);
         }
 
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
@@ -55,12 +56,14 @@ namespace VirtualBeings
             PropertyField soundType = new PropertyField(property.FindPropertyRelative(nameof(Sound.SoundType)));
             PropertyField poignancy01 = new PropertyField(property.FindPropertyRelative(nameof(Sound.Poignancy01)));
             PropertyField vocalAnnoyingness = new PropertyField(property.FindPropertyRelative(nameof(Sound.VocalAnnoyingnessSummand)));
+            PropertyField looped = new PropertyField(property.FindPropertyRelative(nameof(Sound.Looped)));
 
             audioClip.Bind(property.serializedObject);
             animationMultiplier.Bind(property.serializedObject);
             soundType.Bind(property.serializedObject);
             poignancy01.Bind(property.serializedObject);
             vocalAnnoyingness.Bind(property.serializedObject);
+            looped.Bind(property.serializedObject);
 
             // Create property container element
             VisualElement container = new VisualElement();
@@ -77,28 +80,31 @@ namespace VirtualBeings
                 EditorCoroutineUtility.StartCoroutineOwnerless(CrtPlayCoroutine(clip));
             };
 
-            // refresh the warning
-            {
-                bool show = animationMulProp.floatValue <= 0;
-                animationWarning.Display(show);
-
-                bool enableBtn = audioClipProp.objectReferenceValue != null;
-                playAudioBtn.SetEnabled(enableBtn);
-            }
-
-            // listen to mul changes
-            container.TrackPropertyValue(animationMulProp, (prop) =>
+            Action<SerializedProperty> animationMulCallback = (prop) =>
             {
                 bool show = prop.floatValue <= 0;
                 animationWarning.Display(show);
+            };
+
+            Action<SerializedProperty> audioClipCallback = (prop) =>
+            {
+                bool enableBtn = prop.objectReferenceValue != null;
+                playAudioBtn.SetEnabled(enableBtn);
+            };
+
+            container.TrackSerializedObjectValue(property.serializedObject, obj =>
+            {
+                BeingSharedSettings parent = obj.targetObject as BeingSharedSettings;
+
+                SerializedProperty animationMulProp = property.FindPropertyRelative(nameof(Sound.AnimationMultiplier));
+                SerializedProperty audioClipProp = property.FindPropertyRelative(nameof(Sound.AudioClip));
+
+                animationMulCallback(animationMulProp);
+                audioClipCallback(audioClipProp);
             });
 
-            // listen to mul changes
-            container.TrackPropertyValue(audioClipProp, (prop) =>
-            {
-                bool enableBtn = audioClipProp.objectReferenceValue != null;
-                playAudioBtn.SetEnabled(enableBtn);
-            });
+            animationMulCallback(animationMulProp);
+            audioClipCallback(audioClipProp);
 
             row.Add(audioClip);
             row.Add(playAudioBtn);
@@ -109,6 +115,7 @@ namespace VirtualBeings
             container.Add(soundType);
             container.Add(poignancy01);
             container.Add(vocalAnnoyingness);
+            container.Add(looped);
 
             return container;
         }
