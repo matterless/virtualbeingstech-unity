@@ -9,3 +9,6 @@ bin
 obj
 .vs
 tmp
+
+# Mac
+*.DS_Store
