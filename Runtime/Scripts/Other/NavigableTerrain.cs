@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Serialization;
 using VirtualBeings.Tech.BehaviorComposition;
@@ -283,7 +284,16 @@ namespace VirtualBeings.Tech.Shared
         {
             if (reference == null || minDistFromReference == 0f)
             {
-                _interactionDB.FindAll(typeof(IWalkableZone), (i) => true, _resultBufferForInteractableSearches);
+                IWalkableZone[] walkableZones = GetComponentsInChildren<IWalkableZone>();
+
+                if(walkableZones == null || walkableZones.Length <= 0)
+                {
+                    _interactionDB.FindAll(typeof(IWalkableZone), (i) => true, _resultBufferForInteractableSearches);
+                }
+                else
+                {
+                    _resultBufferForInteractableSearches = walkableZones.ToList<IInteractable>();
+                }
             }
             else
             {
@@ -307,7 +317,7 @@ namespace VirtualBeings.Tech.Shared
                     return true;
             }
 
-            position = Vector3.zero;
+            position = transform.position;
             return false;
         }
 
@@ -518,7 +528,7 @@ namespace VirtualBeings.Tech.Shared
 
         private          EventManager        _worldEvents;
         private          InteractionDB       _interactionDB;
-        private readonly List<IInteractable> _resultBufferForInteractableSearches = new();
+        private List<IInteractable> _resultBufferForInteractableSearches = new();
 
         [Serializable]
         public class Settings

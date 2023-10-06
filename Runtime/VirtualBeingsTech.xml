@@ -5754,11 +5754,12 @@
             For simpler and better request to fly, use already exisiting FLy Service Activity like <see cref="T:VirtualBeings.Tech.Beings.Bird.FlyToSafety"/>, <see cref="T:VirtualBeings.Tech.Beings.Bird.FlyToGroundTarget"/>
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.Beings.Bird.Fly.TakeOff(VirtualBeings.Tech.Beings.Bird.TransitionTypeBirdBase,System.Boolean)">
+        <member name="M:VirtualBeings.Tech.Beings.Bird.Fly.TakeOff(VirtualBeings.Tech.Beings.Bird.TransitionTypeBirdBase,VirtualBeings.Tech.BehaviorComposition.IRS,System.Boolean)">
             <summary>
             Request the Being to TakeOff, which will make it enter a flying state. Only entry point to flying. Use it before using other fly query.
             </summary>
             <param name="transitionTypeBirdBase"></param>
+            <param name="walkRS"></param>
             <param name="toHover"></param>
             <returns></returns>
         </member>
@@ -6146,6 +6147,24 @@
         </member>
         <member name="M:VirtualBeings.Tech.Beings.Bird.TransitionTypeBirdBase.#ctor(System.String)">
             Internals
+        </member>
+        <member name="T:VirtualBeings.Tech.Beings.Birds.IBirdWalkableZone">
+            <summary>
+            A bird specific walkable zone, that provide a method to get a free landing position,
+            and a free take off position
+            </summary>
+        </member>
+        <member name="M:VirtualBeings.Tech.Beings.Birds.IBirdWalkableZone.GetFreeLandPosition">
+            <summary>
+            Get a land position that is free without any obstacle
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:VirtualBeings.Tech.Beings.Birds.IBirdWalkableZone.GetFreeTakeOffPosition">
+            <summary>
+            Get a take off position where the bird can take off freqely without too much obstacle near this position
+            </summary>
+            <returns></returns>
         </member>
         <member name="T:VirtualBeings.Tech.Beings.Floater.AdditiveEarExpressionFloaterBase">
              <summary>
@@ -8136,6 +8155,7 @@
             Normally left alone; *can* be set by (e.g. touch controller) *per frame* to make SpatialDB correct Velocity.
             This is useful to avoid making virtual beings aware of camera movements on flat-screen devices (because
             they are distractable and will often look at the moving camera).
+            NOTE: This value is consumed (reset to zero) each frame.
             </summary>
         </member>
         <member name="P:VirtualBeings.Tech.UnityIntegration.IInteractable.InteractableID">
@@ -8730,6 +8750,11 @@
             Version that can be used as a parameter to Debug.ASSERT(), which gets stripped out in release builds.
             </summary>
         </member>
+        <member name="M:VirtualBeings.Tech.UnityIntegration.Misc.LogSafe(System.Object[])">
+            <summary>
+            See Misc.Log. This version can be used outside of the main thread as opposed to Log. It does not show the time.
+            </summary>
+        </member>
         <member name="M:VirtualBeings.Tech.UnityIntegration.Misc.LogWarning(System.Object[])">
             <summary>
             Wrapper around Debug.Log() that provides timestamp and nicer formatting for numerical values.
@@ -8770,7 +8795,7 @@
             Version that can be used as a parameter to Debug.ASSERT(), which gets stripped out in release builds.
             </summary>
         </member>
-        <member name="M:VirtualBeings.Tech.UnityIntegration.Misc.LogInternal(System.Int32,System.Object[])">
+        <member name="M:VirtualBeings.Tech.UnityIntegration.Misc.LogInternal(System.Int32,System.Boolean,System.Object[])">
             <summary>
             Wrapper around Debug.Log() that provides timestamp and nicer formatting for numerical values.
             </summary>
