@@ -24,6 +24,8 @@ namespace VirtualBeings.Tech.Shared
 
         [SerializeField]
         private float _overrideRefreshPeriod = -1f;
+        [SerializeField]
+        private bool _ignoreTriggerCollider = true;
 
         private void Awake()
         {
@@ -41,7 +43,12 @@ namespace VirtualBeings.Tech.Shared
 
             foreach (Collider c in _colliders)
             {
-                switch(ObstacleType)
+                if(c.isTrigger && _ignoreTriggerCollider)
+                {
+                    continue;
+                }
+
+                switch (ObstacleType)
                 {
                     case ObstacleType.Dynamic:
                         _navigableTerrainManager.RegisterGameObjectAsObstacle(c.gameObject,
